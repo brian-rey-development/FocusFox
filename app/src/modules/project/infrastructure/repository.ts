@@ -8,6 +8,12 @@ import type { Project } from '../domain/types';
 
 export function createProjectRepo(db: IDBPDatabase<FocusFoxDB>): ProjectRepo {
   return {
+    async get(id) {
+      const tx = db.transaction('projects', 'readonly');
+      const result = await tx.store.get(id);
+      return result ?? null;
+    },
+
     async list(opts = {}) {
       const tx = db.transaction('projects', 'readonly');
       const all = await tx.store.getAll();

@@ -50,7 +50,7 @@ async function setupEngine() {
   const noteSvc = createNoteService(db);
   const settingsSvc = createSettingsService(db);
   const projectSvc = createProjectService(db, taskSvc);
-  const pomodoroSvc = createPomodoroService(db, taskSvc, noteSvc);
+  const pomodoroSvc = createPomodoroService(db, taskSvc);
 
   const alarmManager = createMockAlarmManager();
   const fastStorage = createMockFastStorage();

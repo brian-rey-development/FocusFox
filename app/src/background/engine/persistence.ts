@@ -1,15 +1,19 @@
 import type { DB } from '@/shared/database/types';
-import type { EngineState, FastStorage } from './types';
+import type { EnginePhase, EngineState, FastStorage } from './types';
 
 const KEY = 'engineState';
+
+const VALID_PHASES = new Set<EnginePhase>(['idle', 'work', 'short_break', 'long_break']);
 
 export async function saveEngineState(
   fast: FastStorage,
   db: DB,
   state: EngineState,
 ): Promise<void> {
-  await fast.set(KEY, state);
-  await db.meta.set(KEY, state);
+  await Promise.all([
+    fast.set(KEY, state),
+    db.meta.set(KEY, state),
+  ]);
 }
 
 export async function loadEngineState(
@@ -32,6 +36,7 @@ function isEngineState(value: unknown): value is EngineState {
   const s = value as Record<string, unknown>;
   return (
     typeof s.phase === 'string' &&
+    VALID_PHASES.has(s.phase as EnginePhase) &&
     (s.pomodoroId === null || typeof s.pomodoroId === 'string') &&
     (s.taskId === null || typeof s.taskId === 'string') &&
     (s.startedAt === null || typeof s.startedAt === 'number') &&

@@ -36,7 +36,6 @@ export function ActiveView() {
         remainingMs={active.remainingMs}
         totalMs={active.plannedDurationMs}
         label="trabajando"
-        active
       />
       <TaskCard
         taskTitle={task?.title ?? null}

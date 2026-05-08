@@ -5,6 +5,7 @@
   --color-blue: #2f7df6;
   --color-purple: #8b5cf6;
   --color-red: #ef4444;
+  --color-red-600: #dc2626;
 
   --color-primary: var(--color-orange);
   --color-primary-hover: #e05e00;
@@ -14,6 +15,9 @@
   --surface-card: #f8f9fa;
   --surface-hover: #f0f0f0;
   --surface-elevated: #ffffff;
+  --surface-red-light: #fef2f2;
+  --surface-green-light: #f0fdf4;
+  --surface-amber-light: #fffbeb;
 
   --text-primary: #1a1a1a;
   --text-secondary: #6b7280;
@@ -21,7 +25,9 @@
   --text-inverse: #ffffff;
 
   --border-color: #e5e7eb;
-  --border-radius-sm: 4px;
+  --border-color-red-light: #fecaca;
+  --border-radius-xs: 4px;
+  --border-radius-sm: 6px;
   --border-radius-md: 8px;
   --border-radius-lg: 12px;
 

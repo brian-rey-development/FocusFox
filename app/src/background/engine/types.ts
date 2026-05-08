@@ -1,4 +1,6 @@
-export type EnginePhase = 'idle' | 'work' | 'short_break' | 'long_break';
+import type { EnginePhase, TickTaskInfo, Tick } from '@/shared/engine-types';
+
+export type { EnginePhase, TickTaskInfo, Tick };
 
 export interface EngineState {
   phase: EnginePhase;
@@ -6,24 +8,6 @@ export interface EngineState {
   taskId: string | null;
   startedAt: number | null;
   plannedDurationMs: number;
-  cycleIndex: number;
-  distractionCountSession: number;
-}
-
-export interface TickTaskInfo {
-  id: string;
-  title: string;
-  projectId: string;
-  projectName: string;
-  projectColor: string;
-}
-
-export interface Tick {
-  phase: EnginePhase;
-  remainingMs: number;
-  pomodoroId: string | null;
-  plannedDurationMs: number;
-  task: TickTaskInfo | null;
   cycleIndex: number;
   distractionCountSession: number;
 }

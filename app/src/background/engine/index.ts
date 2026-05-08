@@ -1,6 +1,8 @@
 import { NotFoundError } from '@/shared/errors';
 import { dayKey } from '@/shared/time';
 import type { DB } from '@/shared/database/types';
+import type { Task } from '@/modules/task/domain/types';
+import type { Project } from '@/modules/project/domain/types';
 import type { PomodoroService } from '@/modules/pomodoro/application/service';
 import type { TaskService } from '@/modules/task/application/service';
 import type { NoteService } from '@/modules/note/application/service';
@@ -61,6 +63,7 @@ export interface PomodoroEngine {
   handleDailyReset(): Promise<void>;
   getTick(): Promise<Tick>;
   recordDistraction(pomodoroId: string): void;
+  invalidateSettings(): void;
   currentPhase(): EnginePhase;
   currentPomodoroId(): string | null;
 }
@@ -79,10 +82,17 @@ interface Deps {
 export function createPomodoroEngine(deps: Deps): PomodoroEngine {
   let state = defaultState();
   let cachedTaskInfo: TickTaskInfo | null = null;
+  let cachedSettings: typeof DEFAULT_SETTINGS_SNAPSHOT | null = null;
+
+  function getCachedSettings() {
+    return cachedSettings ?? DEFAULT_SETTINGS_SNAPSHOT;
+  }
 
   async function getSettings() {
+    if (cachedSettings) return cachedSettings;
     try {
-      return await deps.settingsSvc.get();
+      cachedSettings = await deps.settingsSvc.get();
+      return cachedSettings;
     } catch {
       return DEFAULT_SETTINGS_SNAPSHOT;
     }
@@ -104,13 +114,7 @@ export function createPomodoroEngine(deps: Deps): PomodoroEngine {
     deps.eventEmitter.broadcast(event);
   }
 
-  async function cacheTaskInfo(taskId: string): Promise<void> {
-    const task = await deps.db.tasks.get(taskId);
-    if (!task) {
-      cachedTaskInfo = null;
-      return;
-    }
-    const projects = await deps.db.projects.list({ includeArchived: true });
+  async function cacheTaskInfo(task: Task, projects: Project[]): Promise<void> {
     const project = projects.find((p) => p.id === task.projectId);
     cachedTaskInfo = {
       id: task.id,
@@ -121,18 +125,18 @@ export function createPomodoroEngine(deps: Deps): PomodoroEngine {
     };
   }
 
-  async function createWorkPomodoro(taskId: string, plannedDurationMs: number, cycleIndex: number): Promise<string> {
-    const task = await deps.db.tasks.get(taskId);
-    if (!task) throw new NotFoundError('Task', taskId);
+  async function fetchProjects(): Promise<Project[]> {
+    return deps.db.projects.list({ includeArchived: true });
+  }
 
+  async function createWorkPomodoro(task: Task, plannedDurationMs: number, cycleIndex: number): Promise<string> {
     const pomodoro = await deps.pomodoroSvc.start({
-      taskId,
+      taskId: task.id,
       projectId: task.projectId,
       kind: 'work',
       plannedDurationMs,
       cycleIndex,
     });
-
     return pomodoro.id;
   }
 
@@ -147,7 +151,6 @@ export function createPomodoroEngine(deps: Deps): PomodoroEngine {
       plannedDurationMs,
       cycleIndex,
     });
-
     return pomodoro.id;
   }
 
@@ -178,38 +181,42 @@ export function createPomodoroEngine(deps: Deps): PomodoroEngine {
     await persist();
   }
 
-  async function startWork(taskId: string, plannedDurationMs: number): Promise<void> {
-    const task = await deps.db.tasks.get(taskId);
-    if (!task) throw new NotFoundError('Task', taskId);
+  async function addAutoNote(text: string): Promise<void> {
+    try {
+      await deps.noteSvc.add({ day: dayKey(Date.now()), kind: 'auto', text });
+    } catch {
+      // Best-effort: auto-notes are non-critical
+    }
+  }
 
+  async function startWork(task: Task, plannedDurationMs: number): Promise<void> {
     if (task.status === 'todo') {
-      await deps.taskSvc.setStatus(taskId, 'doing');
+      await deps.taskSvc.setStatus(task.id, 'doing');
     }
 
-    const pomodoroId = await createWorkPomodoro(taskId, plannedDurationMs, state.cycleIndex);
+    const pomodoroId = await createWorkPomodoro(task, plannedDurationMs, state.cycleIndex);
     const now = Date.now();
     const from = state.phase;
 
     state = {
       phase: 'work',
       pomodoroId,
-      taskId,
+      taskId: task.id,
       startedAt: now,
       plannedDurationMs,
       cycleIndex: state.cycleIndex,
       distractionCountSession: 0,
     };
 
-    await cacheTaskInfo(taskId);
-    await persist();
-    await scheduleTransitionAlarm(now + plannedDurationMs);
+    const projects = await fetchProjects();
+    await cacheTaskInfo(task, projects);
 
-    const today = dayKey(now);
-    await deps.noteSvc.add({
-      day: today,
-      kind: 'auto',
-      text: `Started pomodoro for task ${taskId}`,
-    });
+    await addAutoNote(`Started pomodoro for task ${task.id}`);
+
+    await Promise.all([
+      persist(),
+      scheduleTransitionAlarm(now + plannedDurationMs),
+    ]);
 
     broadcast({ type: 'pomodoro.state_change', from, to: 'work', at: now });
     broadcast({
@@ -217,7 +224,7 @@ export function createPomodoroEngine(deps: Deps): PomodoroEngine {
       phase: 'work',
       startedAt: now,
       plannedDurationMs,
-      taskId,
+      taskId: task.id,
     });
   }
 
@@ -239,8 +246,12 @@ export function createPomodoroEngine(deps: Deps): PomodoroEngine {
       distractionCountSession: 0,
     };
 
-    await persist();
-    await scheduleTransitionAlarm(now + plannedDurationMs);
+    await addAutoNote(`Started ${kind} break`);
+
+    await Promise.all([
+      persist(),
+      scheduleTransitionAlarm(now + plannedDurationMs),
+    ]);
 
     broadcast({ type: 'pomodoro.state_change', from, to: kind, at: now });
     broadcast({
@@ -253,7 +264,7 @@ export function createPomodoroEngine(deps: Deps): PomodoroEngine {
   }
 
   async function completeWork(): Promise<void> {
-    const settings = await getSettings();
+    const settings = getCachedSettings();
     const pomodoroId = state.pomodoroId;
     const taskId = state.taskId;
 
@@ -277,18 +288,21 @@ export function createPomodoroEngine(deps: Deps): PomodoroEngine {
   }
 
   async function completeBreak(): Promise<void> {
-    const settings = await getSettings();
+    const settings = getCachedSettings();
 
     await finishPomodoro(true);
     await clearTransitionAlarm();
 
     if (settings.autoStartNextWork && state.taskId) {
       const workMs = settings.workMs;
-      await startWork(state.taskId, workMs);
-    } else {
-      await transitionTo('idle');
-      await resetToIdle();
+      const task = await deps.db.tasks.get(state.taskId);
+      if (task) {
+        await startWork(task, workMs);
+        return;
+      }
     }
+    await transitionTo('idle');
+    await resetToIdle();
   }
 
   async function doCancel(): Promise<void> {
@@ -309,7 +323,11 @@ export function createPomodoroEngine(deps: Deps): PomodoroEngine {
       if (loaded) {
         state = loaded;
         if (state.taskId) {
-          await cacheTaskInfo(state.taskId);
+          const task = await deps.db.tasks.get(state.taskId);
+          if (task) {
+            const projects = await fetchProjects();
+            await cacheTaskInfo(task, projects);
+          }
         }
       }
     },
@@ -343,7 +361,7 @@ export function createPomodoroEngine(deps: Deps): PomodoroEngine {
       }
 
       const settings = await getSettings();
-      await startWork(taskId, settings.workMs);
+      await startWork(task, settings.workMs);
 
       return {
         ok: true,
@@ -365,14 +383,17 @@ export function createPomodoroEngine(deps: Deps): PomodoroEngine {
       await finishPomodoro(false);
       await clearTransitionAlarm();
 
-      const settings = await getSettings();
+      const settings = getCachedSettings();
       if (settings.autoStartNextWork && state.taskId) {
         const workMs = settings.workMs;
-        await startWork(state.taskId, workMs);
-      } else {
-        await transitionTo('idle');
-        await resetToIdle();
+        const task = await deps.db.tasks.get(state.taskId);
+        if (task) {
+          await startWork(task, workMs);
+          return { ok: true };
+        }
       }
+      await transitionTo('idle');
+      await resetToIdle();
 
       return { ok: true };
     },
@@ -382,12 +403,19 @@ export function createPomodoroEngine(deps: Deps): PomodoroEngine {
         await completeWork();
       } else if (state.phase === 'short_break' || state.phase === 'long_break') {
         await completeBreak();
+      } else {
+        await transitionTo('idle');
+        await resetToIdle();
       }
     },
 
     async handleDailyReset() {
       state.cycleIndex = 1;
       await persist();
+    },
+
+    invalidateSettings() {
+      cachedSettings = null;
     },
 
     async getTick(): Promise<Tick> {

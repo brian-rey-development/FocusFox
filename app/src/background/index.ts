@@ -1,5 +1,5 @@
 import { openDB } from '@/shared/database';
-import type { MessageRouter } from '@/shared/message';
+import type { MessageRouter, HandlerFn } from '@/shared/message';
 import type { PomodoroService } from '@/modules/pomodoro/application/service';
 
 import { createSettingsService } from '@/modules/settings/application/service';
@@ -25,6 +25,7 @@ const ports = new Set<browser.runtime.Port>();
 const TICK_INTERVAL = 1000;
 let tickTimer: ReturnType<typeof setInterval> | null = null;
 let pomodoroSvc: PomodoroService;
+let engine: ReturnType<typeof createPomodoroEngine>;
 
 function broadcast(type: string, data?: unknown) {
   for (const port of ports) {
@@ -41,7 +42,19 @@ function broadcastEvent(event: PomodoroEvent) {
   browser.runtime.sendMessage(event).catch(() => {});
 }
 
-async function tick(engine: ReturnType<typeof createPomodoroEngine>) {
+function wrapHandler(handlers: Record<string, HandlerFn>, after: Record<string, () => void>): Record<string, HandlerFn> {
+  const wrapped: Record<string, HandlerFn> = {};
+  for (const [key, fn] of Object.entries(handlers)) {
+    wrapped[key] = async (payload) => {
+      const result = await fn(payload);
+      if (after[key]) after[key]();
+      return result;
+    };
+  }
+  return wrapped;
+}
+
+async function tick() {
   try {
     const tickData = await engine.getTick();
     broadcast('tick', tickData);
@@ -50,9 +63,9 @@ async function tick(engine: ReturnType<typeof createPomodoroEngine>) {
   }
 }
 
-function startTick(engine: ReturnType<typeof createPomodoroEngine>) {
+function startTick() {
   if (tickTimer) return;
-  tickTimer = setInterval(() => tick(engine), TICK_INTERVAL);
+  tickTimer = setInterval(tick, TICK_INTERVAL);
 }
 
 function stopTick() {
@@ -71,29 +84,31 @@ async function init() {
   const taskSvc = createTaskService(db);
 
   const projectSvc = createProjectService(db, taskSvc);
-  pomodoroSvc = createPomodoroService(db, taskSvc, noteSvc);
+  pomodoroSvc = createPomodoroService(db, taskSvc);
 
-  const fastStorage = {
-    get: async (key: string) => (await browser.storage.local.get(key))[key],
-    set: async (key: string, value: unknown) => browser.storage.local.set({ [key]: value }),
-  };
-
-  const engine = createPomodoroEngine({
+  engine = createPomodoroEngine({
     db,
     pomodoroSvc,
     taskSvc,
     noteSvc,
     settingsSvc,
     alarmManager: createBrowserAlarmManager(),
-    fastStorage,
+    fastStorage: {
+      get: async (key: string) => (await browser.storage.local.get(key))[key],
+      set: async (key: string, value: unknown) => browser.storage.local.set({ [key]: value }),
+    },
     eventEmitter: { broadcast: broadcastEvent },
   });
 
   await engine.hydrate();
   await engine.recover();
 
+  const settingsHandlers = wrapHandler(createSettingsHandlers(settingsSvc), {
+    'settings:update': () => engine.invalidateSettings(),
+  });
+
   const handlers: MessageRouter = {
-    ...createSettingsHandlers(settingsSvc),
+    ...settingsHandlers,
     ...createMetaHandlers(metaSvc),
     ...createNoteHandlers(noteSvc),
     ...createDistractionHandlers(distractionSvc),
@@ -102,24 +117,28 @@ async function init() {
     ...createPomodoroHandlers(engine, pomodoroSvc),
   };
 
-  browser.runtime.onMessage.addListener((msg) => {
-    if (msg.type === 'distraction:record') {
-      const payload = msg.payload as { pomodoroId?: string };
-      if (payload.pomodoroId) {
-        engine.recordDistraction(payload.pomodoroId);
-      }
-    }
-
+  browser.runtime.onMessage.addListener((msg, sender) => {
+    if (!sender || sender.id !== browser.runtime.id) return;
     const fn = handlers[msg.type];
     if (!fn) return;
     return fn(msg.payload);
   });
 
+  browser.runtime.onMessage.addListener((msg, sender) => {
+    if (!sender || sender.id !== browser.runtime.id) return;
+    if (msg.type === 'distraction:record') {
+      const payload = msg.payload as { pomodoroId?: string };
+      if (payload?.pomodoroId) {
+        engine.recordDistraction(payload.pomodoroId);
+      }
+    }
+  });
+
   browser.alarms.onAlarm.addListener((alarm) => {
     if (alarm.name === 'pomodoro_transition') {
-      engine.handleCompletion();
+      engine.handleCompletion().catch((e) => console.error('[FocusFox] completion failed:', e));
     } else if (alarm.name === 'daily_reset') {
-      engine.handleDailyReset();
+      engine.handleDailyReset().catch((e) => console.error('[FocusFox] daily reset failed:', e));
       scheduleDailyResetAlarm();
     }
   });
@@ -132,14 +151,15 @@ async function init() {
   scheduleDailyResetAlarm();
 
   browser.runtime.onConnect.addListener((port) => {
+    if (port.sender && port.sender.id !== browser.runtime.id) return;
     ports.add(port);
     port.onDisconnect.addListener(() => {
       ports.delete(port);
       if (ports.size === 0) stopTick();
     });
-    if (ports.size === 1) startTick(engine);
-    tick(engine);
+    if (ports.size === 1) startTick();
+    tick();
   });
 }
 
-init();
+init().catch((e) => console.error('[FocusFox] init failed:', e));

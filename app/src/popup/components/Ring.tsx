@@ -5,7 +5,6 @@ interface RingProps {
   remainingMs: number;
   totalMs: number;
   label: string;
-  active: boolean;
 }
 
 const SIZE = 196;

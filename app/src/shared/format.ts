@@ -14,6 +14,7 @@ export function formatMsShort(ms: number): string {
 }
 
 export function formatDate(dayKey: string): string {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(dayKey)) return dayKey;
   const [y, m, d] = dayKey.split('-').map(Number);
   const date = new Date(y, m - 1, d);
   return date.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });

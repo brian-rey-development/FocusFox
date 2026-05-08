@@ -3,16 +3,14 @@ import { createFreshDB } from '../../helpers';
 import { createPomodoroService } from '@/modules/pomodoro/application/service';
 import { PomodoroSchema, TodayStatsSchema } from '@/modules/pomodoro/domain/types';
 import { createTaskService } from '@/modules/task/application/service';
-import { createNoteService } from '@/modules/note/application/service';
 import { dayKey } from '@/shared/time';
 
 async function setup() {
   const db = await createFreshDB();
   const taskSvc = createTaskService(db);
   const task = await taskSvc.create({ projectId: 'proj-1', title: 'Test task' });
-  const noteSvc = createNoteService(db);
-  const pomoSvc = createPomodoroService(db, taskSvc, noteSvc);
-  return { db, taskSvc, noteSvc, pomoSvc, task };
+  const pomoSvc = createPomodoroService(db, taskSvc);
+  return { db, taskSvc, pomoSvc, task };
 }
 
 describe('PomodoroService', () => {

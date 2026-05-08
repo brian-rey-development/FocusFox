@@ -1,6 +1,5 @@
 import type { NoteService } from './service';
-
-type HandlerFn = (payload: unknown) => Promise<unknown>;
+import type { HandlerFn } from '@/shared/message';
 
 export function createNoteHandlers(
   svc: NoteService,

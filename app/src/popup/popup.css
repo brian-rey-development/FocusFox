@@ -86,7 +86,7 @@ input:focus-visible {
 }
 
 .popup-header__chip--break {
-  background: #e8f5e9;
+  background: var(--surface-green-light);
   color: var(--color-green);
 }
 
@@ -166,7 +166,7 @@ input:focus-visible {
   padding: var(--space-2) var(--space-4);
   background: var(--color-primary);
   color: var(--text-inverse);
-  border-radius: 6px;
+  border-radius: var(--border-radius-sm);
   font-weight: var(--font-weight-medium);
   font-size: var(--font-size-sm);
   transition: background var(--transition-fast);
@@ -196,7 +196,7 @@ input:focus-visible {
   width: 100%;
   padding: var(--space-2) var(--space-3);
   border: 1px solid var(--border-color);
-  border-radius: 6px;
+  border-radius: var(--border-radius-sm);
   background: var(--surface-page);
   font-family: inherit;
   font-size: var(--font-size-sm);
@@ -241,7 +241,7 @@ input:focus-visible {
   width: 32px;
   height: 32px;
   border: 1px solid var(--border-color);
-  border-radius: 6px;
+  border-radius: var(--border-radius-sm);
   color: var(--text-primary);
   font-size: var(--font-size-lg);
   font-weight: var(--font-weight-medium);
@@ -285,7 +285,7 @@ input:focus-visible {
   padding: var(--space-3);
   background: var(--color-primary);
   color: var(--text-inverse);
-  border-radius: 6px;
+  border-radius: var(--border-radius-sm);
   font-weight: var(--font-weight-semibold);
   font-size: var(--font-size-sm);
   transition: background var(--transition-fast);
@@ -304,7 +304,7 @@ input:focus-visible {
   width: 100%;
   padding: var(--space-2) var(--space-3);
   border: 1px solid var(--border-color);
-  border-radius: 6px;
+  border-radius: var(--border-radius-sm);
   color: var(--text-secondary);
   font-size: var(--font-size-sm);
   font-weight: var(--font-weight-medium);
@@ -314,7 +314,7 @@ input:focus-visible {
 .popup-actions__secondary:hover {
   border-color: var(--color-red);
   color: var(--color-red);
-  background: #fef2f2;
+  background: var(--surface-red-light);
 }
 
 /* Ring */
@@ -404,18 +404,18 @@ input:focus-visible {
 .popup-distraction__btn {
   padding: var(--space-1) var(--space-3);
   border: 1px solid var(--border-color);
-  border-radius: 6px;
+  border-radius: var(--border-radius-sm);
   font-size: var(--font-size-xs);
   font-weight: var(--font-weight-medium);
   color: var(--text-secondary);
   transition: all var(--transition-fast);
 }
 
-.popup-distraction__btn:hover {
-  border-color: var(--color-amber);
-  color: var(--color-amber);
-  background: #fffbeb;
-}
+  .popup-distraction__btn:hover {
+    border-color: var(--color-amber);
+    color: var(--color-amber);
+    background: var(--surface-amber-light);
+  }
 
 /* Manual distraction input */
 .popup-manual-input {
@@ -432,7 +432,7 @@ input:focus-visible {
   width: 100%;
   padding: var(--space-2) var(--space-3);
   border: 1px solid var(--border-color);
-  border-radius: 6px;
+  border-radius: var(--border-radius-sm);
   font-family: inherit;
   font-size: var(--font-size-sm);
   color: var(--text-primary);
@@ -453,7 +453,7 @@ input:focus-visible {
   padding: var(--space-1) var(--space-3);
   background: var(--color-primary);
   color: var(--text-inverse);
-  border-radius: 6px;
+  border-radius: var(--border-radius-sm);
   font-size: var(--font-size-xs);
   font-weight: var(--font-weight-medium);
 }
@@ -465,7 +465,7 @@ input:focus-visible {
 .popup-manual-input__cancel {
   padding: var(--space-1) var(--space-3);
   border: 1px solid var(--border-color);
-  border-radius: 6px;
+  border-radius: var(--border-radius-sm);
   font-size: var(--font-size-xs);
   color: var(--text-secondary);
 }
@@ -477,8 +477,8 @@ input:focus-visible {
 /* Cancel confirm */
 .popup-cancel-confirm {
   padding: var(--space-3);
-  background: #fef2f2;
-  border: 1px solid #fecaca;
+  background: var(--surface-red-light);
+  border: 1px solid var(--border-color-red-light);
   border-radius: var(--border-radius-md);
   display: flex;
   flex-direction: column;
@@ -501,19 +501,19 @@ input:focus-visible {
   padding: var(--space-1) var(--space-3);
   background: var(--color-red);
   color: var(--text-inverse);
-  border-radius: 6px;
+  border-radius: var(--border-radius-sm);
   font-size: var(--font-size-xs);
   font-weight: var(--font-weight-medium);
 }
 
 .popup-cancel-confirm__confirm:hover {
-  background: #dc2626;
+  background: var(--color-red-600);
 }
 
 .popup-cancel-confirm__dismiss {
   padding: var(--space-1) var(--space-3);
   border: 1px solid var(--border-color);
-  border-radius: 6px;
+  border-radius: var(--border-radius-sm);
   font-size: var(--font-size-xs);
   color: var(--text-secondary);
 }
@@ -527,18 +527,18 @@ input:focus-visible {
   width: 100%;
   padding: var(--space-3);
   border: 1px solid var(--border-color);
-  border-radius: 6px;
+  border-radius: var(--border-radius-sm);
   color: var(--text-secondary);
   font-size: var(--font-size-sm);
   font-weight: var(--font-weight-medium);
   transition: all var(--transition-fast);
 }
 
-.popup-break-skip:hover {
-  border-color: var(--color-green);
-  color: var(--color-green);
-  background: #f0fdf4;
-}
+  .popup-break-skip:hover {
+    border-color: var(--color-green);
+    color: var(--color-green);
+    background: var(--surface-green-light);
+  }
 
 /* Toast */
 .popup-toast {
@@ -549,7 +549,7 @@ input:focus-visible {
   padding: var(--space-2) var(--space-3);
   background: var(--color-red);
   color: var(--text-inverse);
-  border-radius: 6px;
+  border-radius: var(--border-radius-sm);
   font-size: var(--font-size-xs);
   font-weight: var(--font-weight-medium);
   z-index: 100;

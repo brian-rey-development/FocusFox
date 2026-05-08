@@ -1,6 +1,5 @@
 import type { SettingsService } from './service';
-
-type HandlerFn = (payload: unknown) => Promise<unknown>;
+import type { HandlerFn } from '@/shared/message';
 
 export function createSettingsHandlers(
   svc: SettingsService,

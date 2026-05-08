@@ -4,7 +4,6 @@ import { dayKey } from '@/shared/time';
 import { StartPomodoroSchema } from '../domain/types';
 import type { Pomodoro, TodayStats } from '../domain/types';
 import type { TaskService } from '@/modules/task/application/service';
-import type { NoteService } from '@/modules/note/application/service';
 
 export interface PomodoroService {
   start(input: unknown): Promise<Pomodoro>;
@@ -16,7 +15,6 @@ export interface PomodoroService {
 export function createPomodoroService(
   db: DB,
   taskSvc: TaskService,
-  noteSvc: NoteService,
 ): PomodoroService {
   return {
     async start(input) {
@@ -26,12 +24,6 @@ export function createPomodoroService(
         throw new ConflictError('A pomodoro is already active');
       }
       const pomodoro = await db.pomodoros.start(parsed);
-      const today = dayKey(pomodoro.startedAt);
-      await noteSvc.add({
-        day: today,
-        kind: 'auto',
-        text: `Started pomodoro for task ${parsed.taskId}`,
-      });
       return pomodoro;
     },
 

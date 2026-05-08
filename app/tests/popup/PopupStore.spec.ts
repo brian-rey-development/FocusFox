@@ -254,27 +254,28 @@ describe('PopupStore', () => {
   });
 
   describe('cancelPomodoro', () => {
-    it('sends pomodoro:cancel and transitions to idle', async () => {
+    it('sends pomodoro:cancel and hides confirm dialog', async () => {
       const mock = mockRuntime();
       mock.sendMessage.mockResolvedValue(undefined);
 
       usePopupStore.setState({
         phase: 'active',
         active: makeActivePomodoro(),
+        showCancelConfirm: true,
+        showManualInput: true,
       });
 
       await usePopupStore.getState().cancelPomodoro();
 
       expect(mock.sendMessage).toHaveBeenCalledWith({ type: 'pomodoro:cancel' });
       const state = usePopupStore.getState();
-      expect(state.phase).toBe('idle');
-      expect(state.active).toBeNull();
       expect(state.showCancelConfirm).toBe(false);
+      expect(state.showManualInput).toBe(false);
     });
   });
 
   describe('skipBreak', () => {
-    it('sends pomodoro:skipBreak and transitions to idle', async () => {
+    it('sends pomodoro:skipBreak', async () => {
       const mock = mockRuntime();
       mock.sendMessage.mockResolvedValue(undefined);
 
@@ -286,7 +287,6 @@ describe('PopupStore', () => {
       await usePopupStore.getState().skipBreak();
 
       expect(mock.sendMessage).toHaveBeenCalledWith({ type: 'pomodoro:skipBreak' });
-      expect(usePopupStore.getState().phase).toBe('idle');
     });
   });
 

@@ -2,17 +2,9 @@ import { create } from 'zustand';
 import { sendMessage } from '@/shared/messages';
 import type { Project } from '@/modules/project/domain/types';
 import type { Task } from '@/modules/task/domain/types';
-import type { EnginePhase } from '@/background/engine/types';
+import type { Tick as TickPayload, EnginePhase } from '@/shared/engine-types';
 
-export interface TickPayload {
-  phase: EnginePhase;
-  remainingMs: number;
-  pomodoroId: string | null;
-  plannedDurationMs: number;
-  task: { id: string; title: string; projectId: string; projectName: string; projectColor: string } | null;
-  cycleIndex: number;
-  distractionCountSession: number;
-}
+export type { TickPayload };
 
 export interface ActivePomodoro {
   id: string;
@@ -137,8 +129,8 @@ export const usePopupStore = create<PopupState & PopupActions>((set, get) => ({
         const project = state.projects.find((p) => p.id === active.projectId);
         if (project) {
           sendMessage<Task[]>('task:list', { projectId: active.projectId }).then((tasks) => {
-            const t = Array.isArray(tasks) ? tasks.filter((x) => x.status !== 'done') : [];
-            set({ tasks: t });
+            const activeTasks = Array.isArray(tasks) ? tasks.filter((task) => task.status !== 'done') : [];
+            set({ tasks: activeTasks });
           }).catch(() => {});
         }
       }
@@ -151,10 +143,8 @@ export const usePopupStore = create<PopupState & PopupActions>((set, get) => ({
 
   applyEvent(event) {
     if (event.type === 'pomodoro.state_change') {
-      const state = get();
-      if (state.phase !== 'loading' && state.phase !== 'error') {
-        // Phase will be updated on next tick; no immediate action needed
-      }
+      const stateChange = event as unknown as { from: EnginePhase; to: EnginePhase; at: number };
+      set({ phase: phaseFromEngine(stateChange.to) });
     }
   },
 
@@ -199,12 +189,7 @@ export const usePopupStore = create<PopupState & PopupActions>((set, get) => ({
   async cancelPomodoro() {
     try {
       await sendMessage('pomodoro:cancel');
-      set({
-        phase: 'idle',
-        active: null,
-        showCancelConfirm: false,
-        showManualInput: false,
-      });
+      set({ showCancelConfirm: false, showManualInput: false });
     } catch {
       set({ error: 'Failed to cancel pomodoro' });
     }
