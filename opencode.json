@@ -1,0 +1,59 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "permission": {
+    "bash": {
+      "*": "ask",
+      "git *": "allow",
+      "git push *": "ask",
+      "git reset --hard *": "deny",
+      "npm *": "allow",
+      "npm publish *": "ask",
+      "npx *": "allow",
+      "node *": "allow",
+      "python *": "allow",
+      "python3 *": "allow",
+      "pip *": "allow",
+      "pip install *": "ask",
+      "grep *": "allow",
+      "find *": "allow",
+      "ls *": "allow",
+      "cat *": "allow",
+      "echo *": "allow",
+      "mkdir *": "allow",
+      "cp *": "allow",
+      "mv *": "ask",
+      "rm *": "ask",
+      "rm -rf *": "ask",
+      "chmod *": "ask",
+      "curl *": "ask",
+      "wget *": "ask",
+      "docker *": "ask",
+      "docker rm *": "deny",
+      "docker rmi *": "deny",
+      "kill *": "deny",
+      "sudo *": "deny"
+    },
+    "edit": {
+      "*": "ask",
+      "src/**/*.ts": "allow",
+      "src/**/*.tsx": "allow",
+      "src/**/*.js": "allow",
+      "src/**/*.jsx": "allow",
+      "src/**/*.css": "allow",
+      "src/**/*.json": "allow",
+      "src/**/*.md": "allow",
+      "tests/**/*": "allow",
+      "*.config.*": "ask",
+      ".env*": "deny",
+      "package-lock.json": "deny",
+      "yarn.lock": "deny"
+    },
+    "read": {
+      "*": "allow",
+      ".env.example": "allow",
+      ".env.*": "ask",
+      "**/*.pem": "deny",
+      "**/*.key": "deny"
+    }
+  }
+}

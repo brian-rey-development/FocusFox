@@ -1,0 +1,28 @@
+{
+  "manifest_version": 3,
+  "name": "FocusFox",
+  "version": "0.1.0",
+  "description": "Pomodoro + tasks + hard focus blocking.",
+  "permissions": [
+    "storage",
+    "tabs",
+    "webRequest",
+    "webRequestBlocking",
+    "alarms"
+  ],
+  "host_permissions": ["<all_urls>"],
+  "background": {
+    "scripts": ["background/index.js"],
+    "type": "module"
+  },
+  "action": {
+    "default_popup": "popup/index.html",
+    "default_title": "FocusFox"
+  },
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "focusfox@brian.dev",
+      "strict_min_version": "115.0"
+    }
+  }
+}
