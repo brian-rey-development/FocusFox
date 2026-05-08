@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { createFreshDB } from '../../helpers';
-import { createMetaService } from '@/modules/meta/service';
+import { createMetaService } from '@/modules/meta/application/service';
 
 describe('MetaService', () => {
   it('returns null for missing key', async () => {

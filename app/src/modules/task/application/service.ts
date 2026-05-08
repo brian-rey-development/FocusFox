@@ -1,7 +1,7 @@
 import type { DB } from '@/shared/database/types';
 import { NotFoundError, ValidationError } from '@/shared/errors';
-import { CreateTaskSchema, TaskStatusSchema, UpdateTaskSchema } from './domain/types';
-import type { Task, TaskStatus } from './domain/types';
+import { CreateTaskSchema, TaskStatusSchema, UpdateTaskSchema } from '../domain/types';
+import type { Task, TaskStatus } from '../domain/types';
 
 export interface TaskService {
   list(projectId: string): Promise<Task[]>;
@@ -50,16 +50,15 @@ export function createTaskService(db: DB): TaskService {
       if (newStatus === 'done') {
         patch.doneAt = Date.now();
       }
-
       return db.tasks.update(id, patch);
     },
 
     async delete(id) {
-      return db.tasks.delete(id);
+      await db.tasks.delete(id);
     },
 
     async incrementCompletedPomodoros(taskId) {
-      return db.tasks.incrementCompletedPomodoros(taskId);
+      await db.tasks.incrementCompletedPomodoros(taskId);
     },
   };
 }

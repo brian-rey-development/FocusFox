@@ -6,13 +6,5 @@ export interface MetaService {
 }
 
 export function createMetaService(db: DB): MetaService {
-  return {
-    get(key) {
-      return db.meta.get(key);
-    },
-
-    set(key, value) {
-      return db.meta.set(key, value);
-    },
-  };
+  return { get: db.meta.get, set: db.meta.set };
 }

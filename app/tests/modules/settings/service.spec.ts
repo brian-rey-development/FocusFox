@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { createFreshDB } from '../../helpers';
-import { createSettingsService } from '@/modules/settings/service';
+import { createSettingsService } from '@/modules/settings/application/service';
 import { SettingsSchema } from '@/modules/settings/domain/types';
 
 describe('SettingsService', () => {

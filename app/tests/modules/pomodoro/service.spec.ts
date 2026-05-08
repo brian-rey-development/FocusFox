@@ -1,9 +1,9 @@
 import { describe, it, expect } from 'vitest';
 import { createFreshDB } from '../../helpers';
-import { createPomodoroService } from '@/modules/pomodoro/service';
+import { createPomodoroService } from '@/modules/pomodoro/application/service';
 import { PomodoroSchema, TodayStatsSchema } from '@/modules/pomodoro/domain/types';
-import { createTaskService } from '@/modules/task/service';
-import { createNoteService } from '@/modules/note/service';
+import { createTaskService } from '@/modules/task/application/service';
+import { createNoteService } from '@/modules/note/application/service';
 import { dayKey } from '@/shared/time';
 
 async function setup() {

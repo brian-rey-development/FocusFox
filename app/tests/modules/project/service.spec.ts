@@ -1,8 +1,8 @@
 import { describe, it, expect } from 'vitest';
 import { createFreshDB } from '../../helpers';
-import { createProjectService } from '@/modules/project/service';
+import { createProjectService } from '@/modules/project/application/service';
 import { ProjectSchema } from '@/modules/project/domain/types';
-import { createTaskService } from '@/modules/task/service';
+import { createTaskService } from '@/modules/task/application/service';
 
 describe('ProjectService', () => {
   it('creates a project', async () => {

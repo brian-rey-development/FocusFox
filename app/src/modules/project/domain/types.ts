@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-export const ProjectColorSchema = z.enum(['blue', 'amber', 'green', 'purple', 'red', 'cyan']);
+export const ProjectColorSchema = z.enum(['orange', 'amber', 'green', 'blue', 'purple', 'red']);
 export type ProjectColor = z.infer<typeof ProjectColorSchema>;
 
 export const ProjectSchema = z.object({

@@ -1,3 +1,4 @@
+/// <reference types="vitest" />
 import { defineConfig } from 'vite';
 import { crx } from '@crxjs/vite-plugin';
 import path from 'path';
@@ -12,5 +13,9 @@ export default defineConfig({
   },
   build: {
     emptyOutDir: true,
+  },
+  test: {
+    environment: 'jsdom',
+    globals: true,
   },
 });

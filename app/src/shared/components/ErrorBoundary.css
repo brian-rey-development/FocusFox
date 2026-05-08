@@ -1,0 +1,25 @@
+.ErrorBoundary {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-3);
+  padding: var(--space-8);
+  text-align: center;
+  color: var(--text-secondary);
+  font-size: var(--font-size-md);
+}
+
+.ErrorBoundary button {
+  padding: var(--space-2) var(--space-4);
+  background: var(--color-primary);
+  color: var(--text-inverse);
+  border: none;
+  border-radius: var(--border-radius-md);
+  cursor: pointer;
+  font-size: var(--font-size-md);
+}
+
+.ErrorBoundary button:hover {
+  background: var(--color-primary-hover);
+}

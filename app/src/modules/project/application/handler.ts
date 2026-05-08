@@ -6,7 +6,7 @@ export function createProjectHandlers(
   svc: ProjectService,
 ): Record<string, HandlerFn> {
   return {
-    'project:list': (payload) => svc.list((payload as { includeArchived?: boolean } | undefined)),
+    'project:list': () => svc.list(),
     'project:create': (payload) => svc.create(payload),
     'project:update': (payload) => {
       const { id, patch } = payload as { id: string; patch: unknown };

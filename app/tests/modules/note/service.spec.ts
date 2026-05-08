@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { createFreshDB } from '../../helpers';
-import { createNoteService } from '@/modules/note/service';
+import { createNoteService } from '@/modules/note/application/service';
 import { NoteEntrySchema } from '@/modules/note/domain/types';
 
 describe('NoteService', () => {

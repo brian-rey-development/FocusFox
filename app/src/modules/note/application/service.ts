@@ -1,6 +1,6 @@
 import type { DB } from '@/shared/database/types';
-import { CreateNoteSchema, UpdateNoteSchema } from './domain/types';
-import type { NoteEntry } from './domain/types';
+import { CreateNoteSchema, UpdateNoteSchema } from '../domain/types';
+import type { NoteEntry } from '../domain/types';
 
 export interface NoteService {
   add(input: unknown): Promise<NoteEntry>;
@@ -15,18 +15,15 @@ export function createNoteService(db: DB): NoteService {
       const parsed = CreateNoteSchema.parse(input);
       return db.notes.add(parsed);
     },
-
     async listForDay(day) {
       return db.notes.listForDay(day);
     },
-
     async update(id, patch) {
       const parsed = UpdateNoteSchema.parse(patch);
       return db.notes.update(id, parsed);
     },
-
     async delete(id) {
-      return db.notes.delete(id);
+      await db.notes.delete(id);
     },
   };
 }

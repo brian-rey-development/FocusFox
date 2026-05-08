@@ -1,6 +1,6 @@
 import type { DB } from '@/shared/database/types';
-import type { Settings } from './domain/types';
-import { UpdateSettingsSchema } from './domain/types';
+import type { Settings } from '../domain/types';
+import { UpdateSettingsSchema } from '../domain/types';
 
 export interface SettingsService {
   get(): Promise<Settings>;
@@ -9,11 +9,10 @@ export interface SettingsService {
 
 export function createSettingsService(db: DB): SettingsService {
   return {
-    get(): Promise<Settings> {
+    async get() {
       return db.settings.get();
     },
-
-    async update(patch: unknown): Promise<Settings> {
+    async update(patch) {
       const parsed = UpdateSettingsSchema.parse(patch);
       return db.settings.update(parsed);
     },

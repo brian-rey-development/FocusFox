@@ -1,8 +1,8 @@
 import type { DB } from '@/shared/database/types';
 import { ConflictError } from '@/shared/errors';
-import { CreateProjectSchema, UpdateProjectSchema } from './domain/types';
-import type { Project } from './domain/types';
-import type { TaskService } from '@/modules/task/service';
+import { CreateProjectSchema, UpdateProjectSchema } from '../domain/types';
+import type { Project } from '../domain/types';
+import type { TaskService } from '@/modules/task/application/service';
 
 export interface ProjectService {
   list(opts?: { includeArchived?: boolean }): Promise<Project[]>;
@@ -12,7 +12,7 @@ export interface ProjectService {
   unarchive(id: string): Promise<void>;
 }
 
-export function createProjectService(db: DB, taskService: TaskService): ProjectService {
+export function createProjectService(db: DB, taskSvc: TaskService): ProjectService {
   return {
     async list(opts) {
       return db.projects.list(opts);
@@ -29,15 +29,15 @@ export function createProjectService(db: DB, taskService: TaskService): ProjectS
     },
 
     async archive(id) {
-      const tasks = await taskService.list(id);
+      const tasks = await taskSvc.list(id);
       if (tasks.some((t) => t.status === 'doing')) {
         throw new ConflictError('Cannot archive project with active tasks');
       }
-      return db.projects.archive(id);
+      await db.projects.archive(id);
     },
 
     async unarchive(id) {
-      return db.projects.unarchive(id);
+      await db.projects.unarchive(id);
     },
   };
 }

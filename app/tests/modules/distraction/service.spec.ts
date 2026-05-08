@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { createFreshDB } from '../../helpers';
-import { createDistractionService } from '@/modules/distraction/service';
+import { createDistractionService } from '@/modules/distraction/application/service';
 import { DistractionSchema } from '@/modules/distraction/domain/types';
 
 describe('DistractionService', () => {

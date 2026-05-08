@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { createFreshDB } from '../../helpers';
-import { createTaskService } from '@/modules/task/service';
+import { createTaskService } from '@/modules/task/application/service';
 import { TaskSchema } from '@/modules/task/domain/types';
 
 describe('TaskService', () => {
