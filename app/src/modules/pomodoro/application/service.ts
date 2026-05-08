@@ -8,7 +8,7 @@ import type { NoteService } from '@/modules/note/application/service';
 
 export interface PomodoroService {
   start(input: unknown): Promise<Pomodoro>;
-  finish(id: string, completedFully?: boolean): Promise<Pomodoro>;
+  finish(id: string, completedFully?: boolean, distractionCount?: number): Promise<Pomodoro>;
   getActive(): Promise<Pomodoro | null>;
   getTodayStats(): Promise<TodayStats>;
 }
@@ -35,7 +35,7 @@ export function createPomodoroService(
       return pomodoro;
     },
 
-    async finish(id, completedFully = true) {
+    async finish(id, completedFully = true, distractionCount) {
       const pomodoro = await db.pomodoros.get(id);
       if (!pomodoro) {
         throw new NotFoundError('Pomodoro', id);
@@ -43,7 +43,7 @@ export function createPomodoroService(
       if (pomodoro.endedAt !== null) {
         throw new ValidationError('Pomodoro is already finished');
       }
-      const updated = await db.pomodoros.finish(id, Date.now(), completedFully);
+      const updated = await db.pomodoros.finish(id, Date.now(), completedFully, distractionCount);
       if (completedFully && pomodoro.kind === 'work') {
         await taskSvc.incrementCompletedPomodoros(pomodoro.taskId);
       }

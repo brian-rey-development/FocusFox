@@ -8,7 +8,7 @@ export interface PomodoroRepo {
     plannedDurationMs: number;
     cycleIndex: number;
   }): Promise<Pomodoro>;
-  finish(id: string, endedAt: number, completedFully: boolean): Promise<Pomodoro>;
+  finish(id: string, endedAt: number, completedFully: boolean, distractionCount?: number): Promise<Pomodoro>;
   get(id: string): Promise<Pomodoro | null>;
   listForDay(day: string): Promise<Pomodoro[]>;
   listForRange(fromDay: string, toDay: string): Promise<Pomodoro[]>;

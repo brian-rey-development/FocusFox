@@ -17,6 +17,10 @@ import { createProjectHandlers } from '@/modules/project/application/handler';
 import { createPomodoroService } from '@/modules/pomodoro/application/service';
 import { createPomodoroHandlers } from '@/modules/pomodoro/application/handler';
 
+import { createPomodoroEngine } from '@/background/engine';
+import { createBrowserAlarmManager } from '@/background/engine/alarms';
+import type { PomodoroEvent } from '@/background/engine/types';
+
 const ports = new Set<browser.runtime.Port>();
 const TICK_INTERVAL = 1000;
 let tickTimer: ReturnType<typeof setInterval> | null = null;
@@ -32,31 +36,23 @@ function broadcast(type: string, data?: unknown) {
   }
 }
 
-async function tick() {
+function broadcastEvent(event: PomodoroEvent) {
+  broadcast('event', event);
+  browser.runtime.sendMessage(event).catch(() => {});
+}
+
+async function tick(engine: ReturnType<typeof createPomodoroEngine>) {
   try {
-    const active = await pomodoroSvc.getActive();
-    broadcast('tick', {
-      now: Date.now(),
-      active: active
-        ? {
-            id: active.id,
-            kind: active.kind,
-            startedAt: active.startedAt,
-            plannedDurationMs: active.plannedDurationMs,
-            distractionCount: active.distractionCount,
-            taskId: active.taskId,
-            projectId: active.projectId,
-          }
-        : null,
-    });
+    const tickData = await engine.getTick();
+    broadcast('tick', tickData);
   } catch {
-    broadcast('tick', { now: Date.now(), active: null });
+    broadcast('tick', { phase: 'idle', remainingMs: 0, pomodoroId: null, plannedDurationMs: 0, task: null, cycleIndex: 1, distractionCountSession: 0 });
   }
 }
 
-function startTick() {
+function startTick(engine: ReturnType<typeof createPomodoroEngine>) {
   if (tickTimer) return;
-  tickTimer = setInterval(tick, TICK_INTERVAL);
+  tickTimer = setInterval(() => tick(engine), TICK_INTERVAL);
 }
 
 function stopTick() {
@@ -77,6 +73,25 @@ async function init() {
   const projectSvc = createProjectService(db, taskSvc);
   pomodoroSvc = createPomodoroService(db, taskSvc, noteSvc);
 
+  const fastStorage = {
+    get: async (key: string) => (await browser.storage.local.get(key))[key],
+    set: async (key: string, value: unknown) => browser.storage.local.set({ [key]: value }),
+  };
+
+  const engine = createPomodoroEngine({
+    db,
+    pomodoroSvc,
+    taskSvc,
+    noteSvc,
+    settingsSvc,
+    alarmManager: createBrowserAlarmManager(),
+    fastStorage,
+    eventEmitter: { broadcast: broadcastEvent },
+  });
+
+  await engine.hydrate();
+  await engine.recover();
+
   const handlers: MessageRouter = {
     ...createSettingsHandlers(settingsSvc),
     ...createMetaHandlers(metaSvc),
@@ -84,14 +99,37 @@ async function init() {
     ...createDistractionHandlers(distractionSvc),
     ...createTaskHandlers(taskSvc),
     ...createProjectHandlers(projectSvc),
-    ...createPomodoroHandlers(pomodoroSvc),
+    ...createPomodoroHandlers(engine, pomodoroSvc),
   };
 
   browser.runtime.onMessage.addListener((msg) => {
+    if (msg.type === 'distraction:record') {
+      const payload = msg.payload as { pomodoroId?: string };
+      if (payload.pomodoroId) {
+        engine.recordDistraction(payload.pomodoroId);
+      }
+    }
+
     const fn = handlers[msg.type];
     if (!fn) return;
     return fn(msg.payload);
   });
+
+  browser.alarms.onAlarm.addListener((alarm) => {
+    if (alarm.name === 'pomodoro_transition') {
+      engine.handleCompletion();
+    } else if (alarm.name === 'daily_reset') {
+      engine.handleDailyReset();
+      scheduleDailyResetAlarm();
+    }
+  });
+
+  function scheduleDailyResetAlarm() {
+    const now = new Date();
+    const tomorrow = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
+    browser.alarms.create('daily_reset', { when: tomorrow.getTime() });
+  }
+  scheduleDailyResetAlarm();
 
   browser.runtime.onConnect.addListener((port) => {
     ports.add(port);
@@ -99,7 +137,8 @@ async function init() {
       ports.delete(port);
       if (ports.size === 0) stopTick();
     });
-    if (ports.size === 1) startTick();
+    if (ports.size === 1) startTick(engine);
+    tick(engine);
   });
 }
 

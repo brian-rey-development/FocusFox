@@ -16,6 +16,7 @@ function App() {
   const error = usePopupStore((s) => s.error);
   const init = usePopupStore((s) => s.init);
   const applyTick = usePopupStore((s) => s.applyTick);
+  const applyEvent = usePopupStore((s) => s.applyEvent);
   const setError = usePopupStore((s) => s.setError);
   const retry = usePopupStore((s) => s.retry);
   const portRef = useRef<browser.runtime.Port | null>(null);
@@ -28,9 +29,11 @@ function App() {
       portRef.current = port;
 
       port.onMessage.addListener((raw: object) => {
-        const msg = raw as { type: string; data: TickPayload };
+        const msg = raw as { type: string; data: unknown };
         if (msg.type === 'tick' && msg.data) {
-          applyTick(msg.data);
+          applyTick(msg.data as TickPayload);
+        } else if (msg.type === 'event' && msg.data) {
+          applyEvent(msg.data as { type: string });
         }
       });
 
@@ -52,7 +55,7 @@ function App() {
         portRef.current = null;
       }
     };
-  }, [init, applyTick, setError]);
+  }, [init, applyTick, applyEvent, setError]);
 
   return (
     <>

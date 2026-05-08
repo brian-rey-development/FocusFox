@@ -29,7 +29,7 @@ export function createPomodoroRepo(db: IDBPDatabase<FocusFoxDB>): PomodoroRepo {
       return pomodoro;
     },
 
-    async finish(id, endedAt, completedFully) {
+    async finish(id, endedAt, completedFully, distractionCount) {
       const tx = db.transaction('pomodoros', 'readwrite');
       const store = tx.store;
       const existing = await store.get(id);
@@ -42,6 +42,7 @@ export function createPomodoroRepo(db: IDBPDatabase<FocusFoxDB>): PomodoroRepo {
         ...existing,
         endedAt,
         completedFully,
+        distractionCount: distractionCount ?? existing.distractionCount,
       };
 
       await store.put(updated);

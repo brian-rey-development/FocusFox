@@ -1,18 +1,20 @@
+import type { PomodoroEngine } from '@/background/engine';
 import type { PomodoroService } from './service';
 
 type HandlerFn = (payload: unknown) => Promise<unknown>;
 
 export function createPomodoroHandlers(
+  engine: PomodoroEngine,
   svc: PomodoroService,
 ): Record<string, HandlerFn> {
   return {
-    'pomodoro:start': (payload) => svc.start(payload),
-    'pomodoro:finish': (payload) => svc.finish(
-      (payload as { id: string }).id,
-      (payload as { completedFully?: boolean }).completedFully,
-    ),
-    'pomodoro:cancel': (payload) => svc.finish((payload as { id: string }).id, false),
-    'pomodoro:skipBreak': (payload) => svc.finish((payload as { id: string }).id, false),
+    'pomodoro:start': (payload) => {
+      const { taskId } = payload as { taskId: string };
+      return engine.start(taskId);
+    },
+    'pomodoro:cancel': () => engine.cancel(),
+    'pomodoro:skipBreak': () => engine.skipBreak(),
+    'pomodoro:snapshot': () => engine.getTick(),
     'pomodoro:getActive': () => svc.getActive(),
     'pomodoro:getTodayStats': () => svc.getTodayStats(),
   };

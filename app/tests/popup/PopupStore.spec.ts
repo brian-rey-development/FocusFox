@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { usePopupStore } from '../../src/popup/PopupStore';
-import type { TickPayload, ActivePomodoro } from '../../src/popup/PopupStore';
+import type { TickPayload } from '../../src/popup/PopupStore';
 import type { Project } from '../../src/modules/project/domain/types';
 import type { Task } from '../../src/modules/task/domain/types';
 
@@ -55,21 +55,24 @@ function makeTask(overrides: Partial<Task> = {}): Task {
 
 function makeTickPayload(overrides: Partial<TickPayload> = {}): TickPayload {
   return {
-    now: 5000,
-    active: {
-      id: 'pomo-1',
-      kind: 'work',
-      startedAt: 1000,
-      plannedDurationMs: 1500000,
-      distractionCount: 2,
-      taskId: 'task-1',
+    phase: 'work',
+    remainingMs: 1496000,
+    pomodoroId: 'pomo-1',
+    plannedDurationMs: 1500000,
+    task: {
+      id: 'task-1',
+      title: 'Test Task',
       projectId: 'proj-1',
+      projectName: 'Test Project',
+      projectColor: 'orange',
     },
+    cycleIndex: 1,
+    distractionCountSession: 2,
     ...overrides,
   };
 }
 
-function makeActivePomodoro(overrides: Partial<ActivePomodoro> = {}): ActivePomodoro {
+function makeActivePomodoro(overrides: Partial<import('../../src/popup/PopupStore').ActivePomodoro> = {}): import('../../src/popup/PopupStore').ActivePomodoro {
   return {
     id: 'pomo-1',
     kind: 'work',
@@ -144,8 +147,8 @@ describe('PopupStore', () => {
   });
 
   describe('applyTick', () => {
-    it('sets active and transitions to active phase for work kind', () => {
-      const tick = makeTickPayload({ active: { ...makeTickPayload().active!, kind: 'work' } });
+    it('sets active and transitions to active phase for work', () => {
+      const tick = makeTickPayload({ phase: 'work' });
       usePopupStore.setState({ phase: 'idle' });
 
       usePopupStore.getState().applyTick(tick);
@@ -154,38 +157,38 @@ describe('PopupStore', () => {
       expect(state.phase).toBe('active');
       expect(state.active).not.toBeNull();
       expect(state.active!.kind).toBe('work');
-      expect(state.active!.remainingMs).toBe(1000 + 1500000 - 5000);
+      expect(state.active!.remainingMs).toBe(1496000);
     });
 
-    it('transitions to break phase for short_break kind', () => {
-      const tick = makeTickPayload({ active: { ...makeTickPayload().active!, kind: 'short_break' } });
+    it('transitions to break phase for short_break', () => {
+      const tick = makeTickPayload({ phase: 'short_break', remainingMs: 300000, plannedDurationMs: 300000 });
 
       usePopupStore.getState().applyTick(tick);
 
       expect(usePopupStore.getState().phase).toBe('break');
     });
 
-    it('transitions to break phase for long_break kind', () => {
-      const tick = makeTickPayload({ active: { ...makeTickPayload().active!, kind: 'long_break' } });
+    it('transitions to break phase for long_break', () => {
+      const tick = makeTickPayload({ phase: 'long_break', remainingMs: 900000, plannedDurationMs: 900000 });
 
       usePopupStore.getState().applyTick(tick);
 
       expect(usePopupStore.getState().phase).toBe('break');
     });
 
-    it('transitions to idle when active becomes null', () => {
+    it('transitions to idle when pomodoroId is null', () => {
       usePopupStore.setState({ phase: 'active', active: makeActivePomodoro() });
 
-      usePopupStore.getState().applyTick({ now: 6000, active: null });
+      usePopupStore.getState().applyTick({ phase: 'idle', remainingMs: 0, pomodoroId: null, plannedDurationMs: 0, task: null, cycleIndex: 1, distractionCountSession: 0 });
 
       expect(usePopupStore.getState().phase).toBe('idle');
       expect(usePopupStore.getState().active).toBeNull();
     });
 
-    it('does not transition from loading when tick has no active', () => {
+    it('does not transition from loading when tick has no active pomodoro', () => {
       usePopupStore.setState({ phase: 'loading' });
 
-      usePopupStore.getState().applyTick({ now: 6000, active: null });
+      usePopupStore.getState().applyTick({ phase: 'idle', remainingMs: 0, pomodoroId: null, plannedDurationMs: 0, task: null, cycleIndex: 1, distractionCountSession: 0 });
 
       expect(usePopupStore.getState().phase).toBe('loading');
     });
@@ -216,7 +219,6 @@ describe('PopupStore', () => {
     it('sends task:update for estimate if different from task value', async () => {
       const mock = mockRuntime();
       mock.sendMessage.mockResolvedValueOnce(undefined);
-      mock.sendMessage.mockResolvedValueOnce({ workMs: 1500000 });
       mock.sendMessage.mockResolvedValueOnce(undefined);
 
       usePopupStore.setState({
@@ -231,9 +233,8 @@ describe('PopupStore', () => {
       expect(mock.sendMessage).toHaveBeenCalledWith({ type: 'task:update', payload: { id: 'task-1', patch: { estimatedPomodoros: 5 } } });
     });
 
-    it('sends pomodoro:start with correct payload', async () => {
+    it('sends pomodoro:start with taskId only', async () => {
       const mock = mockRuntime();
-      mock.sendMessage.mockResolvedValueOnce({ workMs: 1500000 });
       mock.sendMessage.mockResolvedValueOnce(undefined);
 
       usePopupStore.setState({
@@ -247,13 +248,7 @@ describe('PopupStore', () => {
 
       expect(mock.sendMessage).toHaveBeenCalledWith({
         type: 'pomodoro:start',
-        payload: {
-          taskId: 'task-1',
-          projectId: 'proj-1',
-          kind: 'work',
-          plannedDurationMs: 1500000,
-          cycleIndex: 0,
-        },
+        payload: { taskId: 'task-1' },
       });
     });
   });
@@ -270,7 +265,7 @@ describe('PopupStore', () => {
 
       await usePopupStore.getState().cancelPomodoro();
 
-      expect(mock.sendMessage).toHaveBeenCalledWith({ type: 'pomodoro:cancel', payload: { id: 'pomo-1' } });
+      expect(mock.sendMessage).toHaveBeenCalledWith({ type: 'pomodoro:cancel' });
       const state = usePopupStore.getState();
       expect(state.phase).toBe('idle');
       expect(state.active).toBeNull();
@@ -290,7 +285,7 @@ describe('PopupStore', () => {
 
       await usePopupStore.getState().skipBreak();
 
-      expect(mock.sendMessage).toHaveBeenCalledWith({ type: 'pomodoro:skipBreak', payload: { id: 'pomo-1' } });
+      expect(mock.sendMessage).toHaveBeenCalledWith({ type: 'pomodoro:skipBreak' });
       expect(usePopupStore.getState().phase).toBe('idle');
     });
   });
