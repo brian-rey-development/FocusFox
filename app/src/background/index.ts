@@ -16,10 +16,16 @@ import { createProjectService } from '@/modules/project/application/service';
 import { createProjectHandlers } from '@/modules/project/application/handler';
 import { createPomodoroService } from '@/modules/pomodoro/application/service';
 import { createPomodoroHandlers } from '@/modules/pomodoro/application/handler';
+import { createStatsService } from '@/modules/stats/application/service';
+import { createStatsHandlers } from '@/modules/stats/application/handler';
+import { createDataService } from '@/modules/data/application/service';
+import { createDataHandlers } from '@/modules/data/application/handler';
 
 import { createPomodoroEngine } from '@/background/engine';
 import { createBrowserAlarmManager } from '@/background/engine/alarms';
 import type { PomodoroEvent } from '@/background/engine/types';
+import { setAllowlist } from '@/background/blocker/allowlist-cache';
+import { registerBlocker } from '@/background/blocker';
 
 const ports = new Set<browser.runtime.Port>();
 const TICK_INTERVAL = 1000;
@@ -103,8 +109,20 @@ async function init() {
   await engine.hydrate();
   await engine.recover();
 
+  const blockerSettings = await settingsSvc.get();
+  setAllowlist(blockerSettings.allowlist);
+  registerBlocker(engine, distractionSvc);
+
+  const statsSvc = createStatsService(db);
+  const dataSvc = createDataService(db);
+
   const settingsHandlers = wrapHandler(createSettingsHandlers(settingsSvc), {
-    'settings:update': () => engine.invalidateSettings(),
+    'settings:update': () => {
+      engine.invalidateSettings();
+      settingsSvc.get()
+        .then(s => setAllowlist(s.allowlist))
+        .catch(() => {});
+    },
   });
 
   const handlers: MessageRouter = {
@@ -115,6 +133,8 @@ async function init() {
     ...createTaskHandlers(taskSvc),
     ...createProjectHandlers(projectSvc),
     ...createPomodoroHandlers(engine, pomodoroSvc),
+    ...createStatsHandlers(statsSvc),
+    ...createDataHandlers(dataSvc),
   };
 
   browser.runtime.onMessage.addListener((msg, sender) => {

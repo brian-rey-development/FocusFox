@@ -28,18 +28,18 @@ export function ManualDistractionInput({ onSubmit, onCancel }: ManualDistraction
         ref={inputRef}
         className="popup-manual-input__field"
         type="text"
-        placeholder="Reason (optional)"
+        placeholder="Motivo (opcional)"
         value={reason}
         onChange={(e) => setReason(e.target.value)}
         onKeyDown={handleKeyDown}
-        aria-label="Distraction reason"
+        aria-label="Motivo de distracción"
       />
       <div className="popup-manual-input__actions">
         <button className="popup-manual-input__submit" onClick={handleSubmit}>
-          Submit
+          Registrar
         </button>
         <button className="popup-manual-input__cancel" onClick={onCancel}>
-          Cancel
+          Cancelar
         </button>
       </div>
     </div>

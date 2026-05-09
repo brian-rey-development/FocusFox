@@ -16,7 +16,7 @@ export function BreakView() {
         label={LABEL_MAP[active.kind as PomodoroKind] ?? 'descanso'}
       />
       <button className="popup-break-skip" onClick={skipBreak}>
-        Skip break
+        Saltar descanso
       </button>
     </div>
   );

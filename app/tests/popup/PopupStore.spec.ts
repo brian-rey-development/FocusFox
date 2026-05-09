@@ -67,6 +67,7 @@ function makeTickPayload(overrides: Partial<TickPayload> = {}): TickPayload {
       projectColor: 'orange',
     },
     cycleIndex: 1,
+    longBreakEvery: 4,
     distractionCountSession: 2,
     ...overrides,
   };
@@ -179,7 +180,7 @@ describe('PopupStore', () => {
     it('transitions to idle when pomodoroId is null', () => {
       usePopupStore.setState({ phase: 'active', active: makeActivePomodoro() });
 
-      usePopupStore.getState().applyTick({ phase: 'idle', remainingMs: 0, pomodoroId: null, plannedDurationMs: 0, task: null, cycleIndex: 1, distractionCountSession: 0 });
+      usePopupStore.getState().applyTick({ phase: 'idle', remainingMs: 0, pomodoroId: null, plannedDurationMs: 0, task: null, cycleIndex: 1, longBreakEvery: 4, distractionCountSession: 0 });
 
       expect(usePopupStore.getState().phase).toBe('idle');
       expect(usePopupStore.getState().active).toBeNull();
@@ -188,7 +189,7 @@ describe('PopupStore', () => {
     it('does not transition from loading when tick has no active pomodoro', () => {
       usePopupStore.setState({ phase: 'loading' });
 
-      usePopupStore.getState().applyTick({ phase: 'idle', remainingMs: 0, pomodoroId: null, plannedDurationMs: 0, task: null, cycleIndex: 1, distractionCountSession: 0 });
+      usePopupStore.getState().applyTick({ phase: 'idle', remainingMs: 0, pomodoroId: null, plannedDurationMs: 0, task: null, cycleIndex: 1, longBreakEvery: 4, distractionCountSession: 0 });
 
       expect(usePopupStore.getState().phase).toBe('loading');
     });

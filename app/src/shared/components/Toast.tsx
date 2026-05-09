@@ -32,7 +32,7 @@ function ToastItem({ toast, onDismiss }: ToastItemProps) {
   return (
     <div className={`ToastItem ToastItem--${toast.variant}${exiting ? ' ToastItem--exit' : ''}`}>
       <span className="ToastItem__message">{toast.message}</span>
-      <button className="ToastItem__close" onClick={dismiss} aria-label="Dismiss">
+      <button className="ToastItem__close" onClick={dismiss} aria-label="Cerrar">
         <X size={14} />
       </button>
     </div>

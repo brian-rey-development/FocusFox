@@ -1,4 +1,4 @@
-import type { DBSchema } from 'idb';
+import type { DBSchema, IDBPDatabase } from 'idb';
 import type { Distraction } from '@/modules/distraction/domain/types';
 import type { MetaRow } from '@/modules/meta/domain/types';
 import type { NoteEntry } from '@/modules/note/domain/types';
@@ -69,6 +69,7 @@ export interface FocusFoxDB extends DBSchema {
 export interface DB {
   close: () => void;
   resetAllData: () => Promise<void>;
+  raw: IDBPDatabase<FocusFoxDB>;
   projects: ProjectRepo;
   tasks: TaskRepo;
   pomodoros: PomodoroRepo;

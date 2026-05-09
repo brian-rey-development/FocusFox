@@ -24,10 +24,10 @@ export class ErrorBoundary extends Component<Props, State> {
   override render(): ReactNode {
     if (this.state.hasError) {
       return this.props.fallback ?? (
-        <div className="ErrorBoundary">
-          <p>Something went wrong.</p>
+        <div className="error-boundary">
+          <p>Algo salió mal.</p>
           <button onClick={() => this.setState({ hasError: false, error: null })}>
-            Try again
+            Reintentar
           </button>
         </div>
       );

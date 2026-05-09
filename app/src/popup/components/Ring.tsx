@@ -29,7 +29,7 @@ export function Ring({ remainingMs, totalMs, label }: RingProps) {
       className="popup-ring"
       role="timer"
       aria-live="polite"
-      aria-label={`${timeStr} remaining, ${label}`}
+      aria-label={`${timeStr} restante, ${label}`}
     >
       <svg
         className="popup-ring__svg"

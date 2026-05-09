@@ -11,7 +11,7 @@ export function ErrorView({ message, onRetry }: ErrorViewProps) {
       <AlertCircle className="popup-error__icon" aria-hidden="true" />
       <p className="popup-error__message">{message}</p>
       <button className="popup-error__btn" onClick={onRetry}>
-        Retry
+        Reintentar
       </button>
     </div>
   );

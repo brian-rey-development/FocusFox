@@ -1,3 +1,5 @@
+import type { ProjectColor } from '@/modules/project/domain/types';
+
 export type EnginePhase = 'idle' | 'work' | 'short_break' | 'long_break';
 
 export interface TickTaskInfo {
@@ -5,7 +7,7 @@ export interface TickTaskInfo {
   title: string;
   projectId: string;
   projectName: string;
-  projectColor: string;
+  projectColor: ProjectColor;
 }
 
 export interface Tick {
@@ -15,5 +17,6 @@ export interface Tick {
   plannedDurationMs: number;
   task: TickTaskInfo | null;
   cycleIndex: number;
+  longBreakEvery: number;
   distractionCountSession: number;
 }

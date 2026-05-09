@@ -41,8 +41,8 @@ export function Header({ phase }: HeaderProps) {
       <button
         className="popup-header__dashboard-btn"
         onClick={handleDashboard}
-        aria-label="Open dashboard"
-        title="Dashboard"
+        aria-label="Abrir panel"
+        title="Panel"
       >
         <LayoutDashboard size={16} aria-hidden="true" />
       </button>

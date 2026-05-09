@@ -14,7 +14,7 @@ export function Actions({ kind, onPrimary, onSecondary, primaryDisabled }: Actio
           onClick={onPrimary}
           disabled={primaryDisabled}
         >
-          Start pomodoro
+          Iniciar pomodoro
         </button>
       </div>
     );
@@ -24,7 +24,7 @@ export function Actions({ kind, onPrimary, onSecondary, primaryDisabled }: Actio
     <div className="popup-actions">
       {onSecondary && (
         <button className="popup-actions__secondary" onClick={onSecondary}>
-          Cancel
+          Cancelar
         </button>
       )}
     </div>

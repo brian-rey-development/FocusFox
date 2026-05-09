@@ -57,7 +57,7 @@ export interface PomodoroEngine {
   hydrate(): Promise<void>;
   recover(): Promise<void>;
   start(taskId: string): Promise<{ ok: true; phase: EnginePhase; startedAt: number; plannedDurationMs: number } | { ok: false; error: string }>;
-  cancel(): Promise<void>;
+  cancel(): Promise<{ ok: boolean }>;
   skipBreak(): Promise<{ ok: true } | { ok: false; error: string }>;
   handleCompletion(): Promise<void>;
   handleDailyReset(): Promise<void>;
@@ -154,12 +154,13 @@ export function createPomodoroEngine(deps: Deps): PomodoroEngine {
     return pomodoro.id;
   }
 
-  async function finishPomodoro(completedFully: boolean): Promise<void> {
-    if (!state.pomodoroId) return;
+  async function finishPomodoro(completedFully: boolean): Promise<boolean> {
+    if (!state.pomodoroId) return false;
     try {
       await deps.pomodoroSvc.finish(state.pomodoroId, completedFully, state.distractionCountSession);
+      return true;
     } catch {
-      // Best-effort: ignore missing or already-finished pomodoro
+      return false;
     }
   }
 
@@ -264,13 +265,20 @@ export function createPomodoroEngine(deps: Deps): PomodoroEngine {
   }
 
   async function completeWork(): Promise<void> {
-    const settings = getCachedSettings();
+    const settings = await getSettings();
     const pomodoroId = state.pomodoroId;
     const taskId = state.taskId;
 
     if (!pomodoroId || !taskId) return;
 
-    await finishPomodoro(true);
+    const finished = await finishPomodoro(true);
+    if (!finished) {
+      await clearTransitionAlarm();
+      await transitionTo('idle');
+      await resetToIdle();
+      return;
+    }
+
     broadcast({ type: 'pomodoro.completed', pomodoroId, taskId });
 
     const breakKind = nextBreakKind(state.cycleIndex, settings.longBreakEvery);
@@ -288,7 +296,7 @@ export function createPomodoroEngine(deps: Deps): PomodoroEngine {
   }
 
   async function completeBreak(): Promise<void> {
-    const settings = getCachedSettings();
+    const settings = await getSettings();
 
     await finishPomodoro(true);
     await clearTransitionAlarm();
@@ -372,8 +380,9 @@ export function createPomodoroEngine(deps: Deps): PomodoroEngine {
     },
 
     async cancel() {
-      if (state.phase === 'idle') return;
+      if (state.phase === 'idle') return { ok: false };
       await doCancel();
+      return { ok: true };
     },
 
     async skipBreak() {
@@ -383,7 +392,7 @@ export function createPomodoroEngine(deps: Deps): PomodoroEngine {
       await finishPomodoro(false);
       await clearTransitionAlarm();
 
-      const settings = getCachedSettings();
+      const settings = await getSettings();
       if (settings.autoStartNextWork && state.taskId) {
         const workMs = settings.workMs;
         const task = await deps.db.tasks.get(state.taskId);
@@ -416,6 +425,7 @@ export function createPomodoroEngine(deps: Deps): PomodoroEngine {
 
     invalidateSettings() {
       cachedSettings = null;
+      getSettings().catch(() => {});
     },
 
     async getTick(): Promise<Tick> {
@@ -426,6 +436,7 @@ export function createPomodoroEngine(deps: Deps): PomodoroEngine {
         plannedDurationMs: state.plannedDurationMs,
         task: cachedTaskInfo,
         cycleIndex: state.cycleIndex,
+        longBreakEvery: getCachedSettings().longBreakEvery,
         distractionCountSession: state.distractionCountSession,
       };
     },
@@ -433,6 +444,7 @@ export function createPomodoroEngine(deps: Deps): PomodoroEngine {
     recordDistraction(pomodoroId) {
       if (state.pomodoroId === pomodoroId && state.phase === 'work') {
         state.distractionCountSession += 1;
+        persist().catch(() => {});
       }
     },
 

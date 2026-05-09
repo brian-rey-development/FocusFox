@@ -39,7 +39,7 @@ function App() {
 
       port.onDisconnect.addListener(() => {
         if (!cancelled) {
-          setError('Connection lost. Please reopen the popup.');
+          setError('Se perdió la conexión. Reabrí el popup.');
         }
       });
 
@@ -63,7 +63,7 @@ function App() {
       <main className="popup-content">
         {phase === 'loading' && <LoadingView />}
         {phase === 'error' && (
-          <ErrorView message={error ?? 'Unknown error'} onRetry={retry} />
+          <ErrorView message={error ?? 'Error desconocido'} onRetry={retry} />
         )}
         {phase === 'idle' && <IdleView />}
         {phase === 'active' && <ActiveView />}

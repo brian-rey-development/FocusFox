@@ -111,7 +111,7 @@ export const usePopupStore = create<PopupState & PopupActions>((set, get) => ({
         });
       }
     } catch {
-      set({ phase: 'error', error: 'Failed to initialize' });
+      set({ phase: 'error', error: 'No se pudo inicializar' });
     }
   },
 
@@ -182,7 +182,7 @@ export const usePopupStore = create<PopupState & PopupActions>((set, get) => ({
 
       await sendMessage('pomodoro:start', { taskId: selectedTaskId });
     } catch {
-      set({ error: 'Failed to start pomodoro' });
+      set({ error: 'No se pudo iniciar el pomodoro' });
     }
   },
 
@@ -191,7 +191,7 @@ export const usePopupStore = create<PopupState & PopupActions>((set, get) => ({
       await sendMessage('pomodoro:cancel');
       set({ showCancelConfirm: false, showManualInput: false });
     } catch {
-      set({ error: 'Failed to cancel pomodoro' });
+      set({ error: 'No se pudo cancelar el pomodoro' });
     }
   },
 
@@ -200,7 +200,7 @@ export const usePopupStore = create<PopupState & PopupActions>((set, get) => ({
       await sendMessage('pomodoro:skipBreak');
       set({ active: null, phase: 'idle' });
     } catch {
-      set({ error: 'Failed to skip break' });
+      set({ error: 'No se pudo saltar el descanso' });
     }
   },
 
@@ -216,7 +216,7 @@ export const usePopupStore = create<PopupState & PopupActions>((set, get) => ({
       });
       set({ showManualInput: false });
     } catch {
-      set({ error: 'Failed to record distraction' });
+      set({ error: 'No se pudo registrar la distracción' });
     }
   },
 

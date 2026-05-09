@@ -14,9 +14,9 @@ export function TaskSelector({ projects, tasks, selectedTaskId, onSelectTask }: 
   if (nonArchived.length === 0) {
     return (
       <div className="popup-task-selector">
-        <span className="popup-label">Task</span>
+        <span className="popup-label">Tarea</span>
         <p className="popup-task-selector__empty">
-          <a href="#">Create a project from the dashboard</a>
+          <a href="#">Creá un proyecto desde el panel</a>
         </p>
       </div>
     );
@@ -27,9 +27,9 @@ export function TaskSelector({ projects, tasks, selectedTaskId, onSelectTask }: 
   if (!hasActiveTasks) {
     return (
       <div className="popup-task-selector">
-        <span className="popup-label">Task</span>
+        <span className="popup-label">Tarea</span>
         <p className="popup-task-selector__empty">
-          <a href="#">+ new task</a>
+          <a href="#">+ nueva tarea</a>
         </p>
       </div>
     );
@@ -37,7 +37,7 @@ export function TaskSelector({ projects, tasks, selectedTaskId, onSelectTask }: 
 
   return (
     <div className="popup-task-selector">
-      <label className="popup-label" htmlFor="task-select">Task</label>
+      <label className="popup-label" htmlFor="task-select">Tarea</label>
       <select
         id="task-select"
         value={selectedTaskId ?? ''}

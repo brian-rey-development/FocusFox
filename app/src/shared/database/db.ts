@@ -27,6 +27,7 @@ export async function openDB(): Promise<DB> {
 
   return {
     close: () => db.close(),
+    raw: db,
     resetAllData: async () => {
       const stores = ['projects', 'tasks', 'pomodoros', 'distractions', 'notes', 'settings', 'meta'] as const;
       const tx = db.transaction(stores, 'readwrite');

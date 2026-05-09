@@ -16,7 +16,7 @@ export function EstimateStepper({ value, onChange, min, max }: EstimateStepperPr
           className="popup-estimate__btn"
           onClick={() => onChange(value - 1)}
           disabled={value <= min}
-          aria-label="Decrease pomodoro estimate"
+          aria-label="Reducir estimación"
         >
           <Minus size={16} aria-hidden="true" />
         </button>
@@ -25,7 +25,7 @@ export function EstimateStepper({ value, onChange, min, max }: EstimateStepperPr
           className="popup-estimate__btn"
           onClick={() => onChange(value + 1)}
           disabled={value >= max}
-          aria-label="Increase pomodoro estimate"
+          aria-label="Aumentar estimación"
         >
           <Plus size={16} aria-hidden="true" />
         </button>
