@@ -26,8 +26,13 @@ export function SettingsView() {
     datos: false,
   });
   const [footerMeta, setFooterMeta] = useState<FooterMeta | null>(null);
+  const [saveError, setSaveError] = useState<string | null>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const savedTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const savedTimerRefs = useRef<Record<SectionKey, ReturnType<typeof setTimeout> | null>>({
+    pomodoro: null,
+    allowlist: null,
+    datos: null,
+  });
 
   const fetchSettings = useCallback(async () => {
     try {
@@ -47,34 +52,37 @@ export function SettingsView() {
     return () => {
       cancelled = true;
       if (debounceRef.current) clearTimeout(debounceRef.current);
-      if (savedTimerRef.current) clearTimeout(savedTimerRef.current);
+      for (const key of Object.keys(savedTimerRefs.current) as SectionKey[]) {
+        const t = savedTimerRefs.current[key];
+        if (t !== null) clearTimeout(t);
+      }
     };
   }, [fetchSettings]);
 
   if (!settings) return <div className="settings-loading">Cargando...</div>;
 
   function markSaved(section: SectionKey) {
-    if (savedTimerRef.current) clearTimeout(savedTimerRef.current);
+    const existing = savedTimerRefs.current[section];
+    if (existing !== null) clearTimeout(existing);
     setSavedSections((prev) => ({ ...prev, [section]: true }));
-    savedTimerRef.current = setTimeout(() => {
+    savedTimerRefs.current[section] = setTimeout(() => {
       setSavedSections((prev) => ({ ...prev, [section]: false }));
+      savedTimerRefs.current[section] = null;
     }, 1500);
   }
 
   function update(patch: Partial<Omit<Settings, 'id'>>) {
-    try {
-      setSettings((prev) => prev ? { ...prev, ...patch } : prev);
-    } catch (e) {
-      console.error('[FocusFox]', e);
-    }
+    setSettings((prev) => prev ? { ...prev, ...patch } : prev);
   }
 
   async function doSave(section: SectionKey, patch: Partial<Omit<Settings, 'id'>>) {
+    setSaveError(null);
     try {
       await sendMessage('settings:update', patch);
       markSaved(section);
     } catch (e) {
       console.error('[FocusFox]', e);
+      setSaveError('Error al guardar. Intenta de nuevo.');
     }
   }
 
@@ -130,13 +138,13 @@ export function SettingsView() {
             label="Iniciar descanso automáticamente"
             description="Al terminar un pomodoro, el descanso comienza automáticamente"
             value={settings.autoStartBreaks}
-            onChange={(v) => updateNow('pomodoro', { autoStartBreaks: v })}
+            onChange={(v) => { void updateNow('pomodoro', { autoStartBreaks: v }); }}
           />
           <ToggleField
             label="Iniciar siguiente pomodoro automáticamente"
             description="Al terminar un descanso, el siguiente pomodoro comienza automáticamente"
             value={settings.autoStartNextWork}
-            onChange={(v) => updateNow('pomodoro', { autoStartNextWork: v })}
+            onChange={(v) => { void updateNow('pomodoro', { autoStartNextWork: v }); }}
           />
         </div>
       </SettingsSection>
@@ -146,17 +154,18 @@ export function SettingsView() {
           Cuando estás en foco, solo podés navegar a estos dominios. Coincide con subdominios automáticamente.
         </p>
         <DomainAddInput
-          onAdd={(domain) => updateNow('allowlist', { allowlist: [...settings.allowlist, domain] })}
+          onAdd={(domain) => { void updateNow('allowlist', { allowlist: [...settings.allowlist, domain] }); }}
           existing={settings.allowlist}
         />
         <DomainList
           domains={settings.allowlist}
-          onChange={(updated) => updateNow('allowlist', { allowlist: updated })}
+          onChange={(updated) => { void updateNow('allowlist', { allowlist: updated }); }}
         />
       </SettingsSection>
 
       <SettingsSection title="Datos" saved={savedSections.datos}>
-        <DataActions onSaved={fetchSettings} />
+        {saveError && <p className="settings-save-error">{saveError}</p>}
+        <DataActions onSaved={() => { void fetchSettings(); markSaved('datos'); }} />
       </SettingsSection>
 
       {footerMeta && (

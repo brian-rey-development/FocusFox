@@ -88,16 +88,14 @@ export function DataActions({ onSaved }: DataActionsProps) {
   }
 
   useEffect(() => {
-    function onKeyDown(e: KeyboardEvent) {
-      if (e.key === 'Escape') {
-        if (importPreview) setImportPreview(null);
-        if (resetConfirm) { setResetConfirm(false); setResetTyped(''); }
-      }
-    }
-    if (importPreview || resetConfirm) {
-      window.addEventListener('keydown', onKeyDown);
-      return () => window.removeEventListener('keydown', onKeyDown);
-    }
+    const handler = (e: KeyboardEvent) => {
+      if (e.key !== 'Escape') return;
+      if (!importPreview && !resetConfirm) return;
+      if (importPreview) setImportPreview(null);
+      if (resetConfirm) { setResetConfirm(false); setResetTyped(''); }
+    };
+    document.addEventListener('keydown', handler);
+    return () => document.removeEventListener('keydown', handler);
   }, [importPreview, resetConfirm]);
 
   return (
@@ -112,7 +110,7 @@ export function DataActions({ onSaved }: DataActionsProps) {
       {importError && <p className="data-actions__error">{importError}</p>}
 
       <div className="data-actions__group">
-        <button className="data-actions__btn" onClick={handleExport}>
+        <button className="data-actions__btn" onClick={() => { void handleExport(); }}>
           Exportar datos
         </button>
         <p className="data-actions__desc">Descargá tus datos como archivo JSON.</p>
@@ -148,7 +146,7 @@ export function DataActions({ onSaved }: DataActionsProps) {
               <button className="confirm-modal__cancel" onClick={() => setImportPreview(null)}>
                 Cancelar
               </button>
-              <button className="confirm-modal__confirm" onClick={handleImportConfirm}>
+              <button className="confirm-modal__confirm" onClick={() => { void handleImportConfirm(); }}>
                 Importar
               </button>
             </div>
@@ -174,7 +172,7 @@ export function DataActions({ onSaved }: DataActionsProps) {
               </button>
               <button
                 className="confirm-modal__confirm confirm-modal__confirm--danger"
-                onClick={handleReset}
+                onClick={() => { void handleReset(); }}
                 disabled={resetTyped !== 'BORRAR'}
               >
                 Borrar todo

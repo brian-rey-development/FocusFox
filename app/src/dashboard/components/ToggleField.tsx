@@ -14,6 +14,7 @@ export function ToggleField({ label, description, value, onChange }: ToggleField
       </div>
       <input
         type="checkbox"
+        role="switch"
         className="toggle-field__input"
         checked={value}
         onChange={(e) => onChange(e.target.checked)}
