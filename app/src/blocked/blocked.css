@@ -255,6 +255,11 @@ button:focus-visible {
   color: var(--block-text-primary);
 }
 
+/* --- Skeleton loading state --- */
+.blocked-skeleton {
+  opacity: 0.35;
+}
+
 /* --- Attempted URL --- */
 .attempted-url {
   padding: 8px 14px;

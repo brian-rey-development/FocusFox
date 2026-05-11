@@ -3,7 +3,7 @@ import type { Tick } from '@/shared/engine-types';
 import type { TodayStats } from '@/modules/stats/domain/types';
 import type { StreakStats } from '@/modules/stats/domain/types';
 import { useBlockedStore } from './store';
-import { parseBlockedParams } from './utils';
+import { parseBlockedParams, safeRedirectUrl } from './utils';
 import { Stage } from './components/Stage';
 import { BlockedHeader } from './components/BlockedHeader';
 import { TaskTimeCard } from './components/TaskTimeCard';
@@ -21,11 +21,15 @@ function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
   ]);
 }
 
+// Parse params synchronously at module evaluation time so the skeleton
+// can show the domain before any async call completes.
+const { originalUrl: INITIAL_URL, domain: INITIAL_DOMAIN } = parseBlockedParams(window.location.search);
+
 export function App() {
-  const [domain, setDomain] = useState('unknown');
+  const domain = INITIAL_DOMAIN;
   const [mounted, setMounted] = useState(false);
   const portRef = useRef<browser.runtime.Port | null>(null);
-  const originalUrlRef = useRef('');
+  const originalUrlRef = useRef(INITIAL_URL);
 
   const setSnapshot = useBlockedStore((s) => s.setSnapshot);
   const setRemainingMs = useBlockedStore((s) => s.setRemainingMs);
@@ -40,9 +44,9 @@ export function App() {
   const streakDays = useBlockedStore((s) => s.streakDays);
 
   const mount = useCallback(async () => {
-    const { originalUrl, domain: parsedDomain } = parseBlockedParams(window.location.search);
-    originalUrlRef.current = originalUrl;
-    setDomain(parsedDomain);
+    // originalUrlRef and domain are already seeded from the synchronous parse above;
+    // read the current ref value so retry calls also work correctly.
+    const originalUrl = originalUrlRef.current;
 
     async function requestSnapshot(): Promise<Tick | null> {
       try {
@@ -68,7 +72,7 @@ export function App() {
         if (msg.type === 'tick' && msg.data) {
           setRemainingMs(msg.data.remainingMs);
           if (msg.data.phase !== 'work') {
-            window.location.replace(url || 'about:home');
+            window.location.replace(safeRedirectUrl(url, 'about:blank'));
           }
         }
       });
@@ -84,7 +88,7 @@ export function App() {
     if (!tick) return;
 
     if (tick.phase !== 'work') {
-      window.location.replace(originalUrl || 'about:home');
+      window.location.replace(safeRedirectUrl(originalUrl, 'about:blank'));
       return;
     }
 
@@ -113,7 +117,7 @@ export function App() {
   async function handleCancel(): Promise<void> {
     const response = (await browser.runtime.sendMessage({ type: 'pomodoro:cancel' })) as { ok?: boolean };
     if (response?.ok) {
-      window.location.replace(originalUrlRef.current || 'about:home');
+      window.location.replace(safeRedirectUrl(originalUrlRef.current, 'about:blank'));
     }
   }
 
@@ -122,7 +126,22 @@ export function App() {
   }
 
   if (!mounted || !snapshot) {
-    return null;
+    return (
+      <Stage>
+        <BlockedHeader />
+        <div className="task-time-card">
+          <div className="task-time-card__left">
+            <span className="task-time-card__label">Tarea actual</span>
+            <span className="task-time-card__title blocked-skeleton">---</span>
+            <span className="task-time-card__meta blocked-skeleton">{domain}</span>
+          </div>
+          <div className="task-time-card__right">
+            <span className="task-time-card__time blocked-skeleton">--:--</span>
+            <span className="task-time-card__time-label">restantes</span>
+          </div>
+        </div>
+      </Stage>
+    );
   }
 
   const todayValue = today ?? { workPomodoros: 0, distractions: 0 };
