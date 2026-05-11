@@ -81,6 +81,7 @@ export function createTransitions(deps: Deps, h: TransitionHelpers) {
   }
 
   async function transitionToIdle(from: EnginePhase): Promise<void> {
+    await h.clearTransitionAlarm();
     h.setState({
       phase: 'idle',
       pomodoroId: null,
@@ -191,7 +192,6 @@ export function createTransitions(deps: Deps, h: TransitionHelpers) {
 
     const finished = await finishPomodoro(true);
     if (!finished) {
-      await h.clearTransitionAlarm();
       await transitionToIdle(state.phase);
       return;
     }
@@ -208,7 +208,6 @@ export function createTransitions(deps: Deps, h: TransitionHelpers) {
       const breakMs = breakKind === 'long_break' ? settings.longBreakMs : settings.shortBreakMs;
       await startBreak(breakKind, breakMs);
     } else {
-      await h.clearTransitionAlarm();
       await transitionToIdle(state.phase);
     }
   }
@@ -217,7 +216,6 @@ export function createTransitions(deps: Deps, h: TransitionHelpers) {
     const settings = await h.getSettings();
 
     await finishPomodoro(true);
-    await h.clearTransitionAlarm();
 
     if (settings.autoStartNextWork && h.getState().taskId) {
       const workMs = settings.workMs;
@@ -239,7 +237,6 @@ export function createTransitions(deps: Deps, h: TransitionHelpers) {
     await finishPomodoro(false);
     h.broadcast({ type: 'pomodoro.cancelled', pomodoroId });
 
-    await h.clearTransitionAlarm();
     await transitionToIdle(from);
   }
 

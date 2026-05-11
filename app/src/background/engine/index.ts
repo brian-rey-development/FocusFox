@@ -98,7 +98,8 @@ export function createPomodoroEngine(deps: Deps): PomodoroEngine {
       if (state.phase === 'idle') return;
       if (state.startedAt === null) {
         console.error('[FocusFox] engine: corrupt state - non-idle with null startedAt. Resetting.');
-        state = defaultState();
+        helpers.setState(defaultState());
+        helpers.setCachedTaskInfo(null);
         await persist();
         return;
       }
@@ -110,8 +111,8 @@ export function createPomodoroEngine(deps: Deps): PomodoroEngine {
           await this.handleCompletion();
         } catch (e) {
           logCatch('recover handleCompletion', e);
-          state = defaultState();
-          cachedTaskInfo = null;
+          helpers.setState(defaultState());
+          helpers.setCachedTaskInfo(null);
           await persist();
         }
         return;
@@ -164,15 +165,18 @@ export function createPomodoroEngine(deps: Deps): PomodoroEngine {
           return { ok: false as const, error: 'not_in_break' };
         }
         await transitions.finishPomodoro(false);
-        await clearTransitionAlarm();
 
         const settings = await getSettings();
         if (settings.autoStartNextWork && state.taskId) {
           const workMs = settings.workMs;
-          const task = await deps.db.tasks.get(state.taskId);
-          if (task) {
-            await transitions.startWork(task, workMs);
-            return { ok: true as const };
+          try {
+            const task = await deps.db.tasks.get(state.taskId);
+            if (task) {
+              await transitions.startWork(task, workMs);
+              return { ok: true as const };
+            }
+          } catch (e) {
+            logCatch('skipBreak db.tasks.get', e);
           }
         }
 
@@ -194,8 +198,8 @@ export function createPomodoroEngine(deps: Deps): PomodoroEngine {
         } else if (state.phase === 'short_break' || state.phase === 'long_break') {
           await transitions.completeBreak();
         } else {
-          state = defaultState();
-          cachedTaskInfo = null;
+          helpers.setState(defaultState());
+          helpers.setCachedTaskInfo(null);
           await persist();
         }
       } finally {
@@ -237,7 +241,7 @@ export function createPomodoroEngine(deps: Deps): PomodoroEngine {
       transitioning = true;
       try {
         if (state.pomodoroId === pomodoroId && state.phase === 'work') {
-          state.distractionCountSession += 1;
+          helpers.setState({ ...state, distractionCountSession: state.distractionCountSession + 1 });
           await persist();
         }
       } finally {
