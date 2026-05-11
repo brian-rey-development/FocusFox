@@ -73,6 +73,7 @@ export const usePopupStore = create<PopupState & PopupActions>((set, get) => ({
   active: null,
 
   async init() {
+    taskRefreshing = false;
     try {
       const [projects, tick] = await Promise.all([
         sendMessage<Project[]>('project:list'),
@@ -144,8 +145,9 @@ export const usePopupStore = create<PopupState & PopupActions>((set, get) => ({
 
   applyEvent(event) {
     if (event.type === 'pomodoro.state_change') {
-      const stateChange = event as unknown as { from: EnginePhase; to: EnginePhase; at: number };
-      set({ phase: phaseFromEngine(stateChange.to) });
+      if (!event || typeof event !== 'object' || !('to' in event) || !('from' in event)) return;
+      const { to } = event as { from: EnginePhase; to: EnginePhase };
+      set({ phase: phaseFromEngine(to) });
     }
   },
 

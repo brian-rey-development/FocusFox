@@ -1,5 +1,8 @@
+import type React from 'react';
 import { formatMs } from '@/shared/format';
 import type { PomodoroKind } from '@/modules/pomodoro/domain/types';
+
+const TNUM_STYLE: React.CSSProperties = { fontFeatureSettings: "'tnum'" };
 
 interface RingProps {
   remainingMs: number;
@@ -75,7 +78,7 @@ export function Ring({ remainingMs, totalMs, label }: RingProps) {
           fontSize="32"
           fontWeight="700"
           fontFamily="'JetBrains Mono', 'Inter', monospace"
-          style={{ fontFeatureSettings: "'tnum'" } as React.CSSProperties}
+          style={TNUM_STYLE}
         >
           {timeStr}
         </text>

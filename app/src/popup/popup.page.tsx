@@ -34,7 +34,10 @@ function App() {
     if (phase !== prevPhaseRef.current) {
       prevPhaseRef.current = phase;
       const msg = PHASE_ANNOUNCEMENTS[phase];
-      if (msg) setAnnouncement(msg);
+      if (msg) {
+        setAnnouncement('');
+        requestAnimationFrame(() => setAnnouncement(msg));
+      }
     }
   }, [phase]);
 
