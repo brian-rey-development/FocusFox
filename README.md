@@ -29,7 +29,7 @@ pnpm build
 ```
 
 1. Open Firefox → `about:debugging` → This Firefox → Load Temporary Add-on
-2. Select `app/manifest.json`
+2. Select `dist/manifest.json`
 
 ## Development
 

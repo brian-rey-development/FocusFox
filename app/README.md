@@ -27,7 +27,7 @@ pnpm build
 
 1. Open Firefox and go to `about:debugging`
 2. Click "This Firefox" -> "Load Temporary Add-on..."
-3. Select `manifest.json` from the project root
+3. Select `dist/manifest.json`
 
 ## Development
 
