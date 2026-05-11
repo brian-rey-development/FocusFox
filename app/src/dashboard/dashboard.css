@@ -473,8 +473,14 @@ body {
   margin-bottom: 24px;
 }
 
+.quick-note-input__row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
 .quick-note-input__field {
-  width: 100%;
+  flex: 1;
   padding: 10px 14px;
   border: 1px solid var(--dash-border-card);
   border-radius: 8px;
@@ -492,6 +498,54 @@ body {
 
 .quick-note-input__field::placeholder {
   color: var(--dash-text-muted);
+}
+
+.quick-note-input__send {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  flex-shrink: 0;
+  border-radius: 8px;
+  background: var(--dash-accent);
+  color: #000;
+  border: none;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+
+.quick-note-input__send:hover:not(:disabled) {
+  opacity: 0.8;
+}
+
+.quick-note-input__send:disabled {
+  opacity: 0.25;
+  cursor: default;
+}
+
+.quick-note-input__meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 6px;
+  padding: 0 2px;
+  min-height: 18px;
+}
+
+.quick-note-input__hint {
+  font-size: 12px;
+  color: var(--dash-text-muted);
+}
+
+.quick-note-input__counter {
+  font-size: 12px;
+  color: var(--dash-text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.quick-note-input__counter--warn {
+  color: var(--dash-danger);
 }
 
 .timeline {
@@ -539,6 +593,17 @@ body {
   font-size: 14px;
   color: var(--dash-text-primary);
   flex: 1;
+}
+
+.timeline__hashtag {
+  display: inline-block;
+  padding: 1px 6px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 500;
+  background: var(--dash-accent-translucent);
+  color: var(--dash-accent);
+  margin: 0 1px;
 }
 
 .timeline-empty {
