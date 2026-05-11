@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { createRoot } from 'react-dom/client';
+import { ErrorBoundary } from '@/shared/components/ErrorBoundary';
 import { connectPort } from '@/shared/messages';
 import { usePopupStore } from './PopupStore';
 import type { TickPayload } from './PopupStore';
@@ -75,5 +76,5 @@ function App() {
 
 const root = document.getElementById('root');
 if (root) {
-  createRoot(root).render(<App />);
+  createRoot(root).render(<ErrorBoundary><App /></ErrorBoundary>);
 }

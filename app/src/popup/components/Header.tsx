@@ -23,7 +23,7 @@ const CHIP_CLASSES: Record<Phase, string> = {
 
 export function Header({ phase }: HeaderProps) {
   function handleDashboard() {
-    browser.tabs.create({ url: browser.runtime.getURL('dashboard/index.html') });
+    browser.tabs.create({ url: browser.runtime.getURL('src/dashboard/index.html') });
     window.close();
   }
 

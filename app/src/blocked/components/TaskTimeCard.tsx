@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { PROJECT_COLOR_HEX } from '@/shared/constants';
+import { PROJECT_COLOR_HEX } from '@/modules/project/domain/types';
 import type { TaskTimeCardProps } from '../types';
 import { formatRemaining } from '../utils';
 

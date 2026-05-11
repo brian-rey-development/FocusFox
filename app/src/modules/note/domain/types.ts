@@ -21,7 +21,7 @@ export type NoteEntry = z.infer<typeof NoteEntrySchema>;
 export const CreateNoteSchema = z.object({
   day: z.string(),
   kind: NoteEntryKindSchema,
-  text: z.string(),
+  text: z.string().min(1).max(1000),
   refType: NoteEntryRefTypeSchema.optional(),
   refId: z.string().optional(),
 });
@@ -29,7 +29,7 @@ export const CreateNoteSchema = z.object({
 export type CreateNoteInput = z.infer<typeof CreateNoteSchema>;
 
 export const UpdateNoteSchema = z.object({
-  text: z.string(),
+  text: z.string().min(1).max(1000),
 });
 
 export type UpdateNoteInput = z.infer<typeof UpdateNoteSchema>;

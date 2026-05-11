@@ -26,7 +26,12 @@ export function createNoteRepo(db: IDBPDatabase<FocusFoxDB>): NoteRepo {
     async listForDay(day) {
       const tx = db.transaction('notes', 'readonly');
       const index = tx.store.index('by_day');
-      return index.getAll(day);
+      const notes = await index.getAll(day);
+      return notes.sort((a, b) => a.at - b.at);
+    },
+
+    async get(id) {
+      return db.get('notes', id);
     },
 
     async update(id, patch) {

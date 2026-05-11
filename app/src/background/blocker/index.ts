@@ -48,7 +48,7 @@ export function registerBlocker(
   engine: { currentPhase(): EnginePhase; currentPomodoroId(): string | null },
   distractionSvc: DistractionService,
 ): void {
-  const blockedPageBase = browser.runtime.getURL('blocked/index.html');
+  const blockedPageBase = browser.runtime.getURL('src/blocked/index.html');
 
   browser.webRequest.onBeforeRequest.addListener(
     (details) => {
@@ -56,19 +56,20 @@ export function registerBlocker(
       const allowlist = getAllowlist();
       const decision = shouldBlock(details.url, allowlist, '', state);
 
-      if (!decision.block) return {};
+      if (!decision.block || !decision.domain) return {};
 
       const pomodoroId = engine.currentPomodoroId();
+      const domain = decision.domain;
 
       distractionSvc.record({
         pomodoroId: pomodoroId ?? '',
         type: 'auto_blocked_attempt' as const,
         url: details.url,
-        domain: decision.domain!,
+        domain,
       }).catch(() => {});
 
       return {
-        redirectUrl: buildBlockedUrl(details.url, decision.domain!, blockedPageBase),
+        redirectUrl: buildBlockedUrl(details.url, domain, blockedPageBase),
       };
     },
     { urls: ['<all_urls>'], types: ['main_frame'] },

@@ -3,6 +3,7 @@ import type { Task, TaskStatus } from './types';
 export interface TaskRepo {
   get(id: string): Promise<Task | null>;
   list(projectId: string): Promise<Task[]>;
+  listAll(projectIds: string[]): Promise<Task[]>;
   create(input: {
     projectId: string;
     title: string;

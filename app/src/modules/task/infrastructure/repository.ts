@@ -20,6 +20,14 @@ export function createTaskRepo(db: IDBPDatabase<FocusFoxDB>): TaskRepo {
       return index.getAll(projectId);
     },
 
+    async listAll(projectIds) {
+      if (projectIds.length === 0) return [];
+      const tx = db.transaction('tasks', 'readonly');
+      const index = tx.store.index('by_project');
+      const results = await Promise.all(projectIds.map((id) => index.getAll(id)));
+      return results.flat();
+    },
+
     async create(input) {
       const now = Date.now();
       const task: Task = {

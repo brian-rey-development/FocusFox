@@ -1,5 +1,5 @@
 import type { ProjectColor } from '@/modules/project/domain/types';
-import { PROJECT_COLOR_HEX } from '@/shared/constants';
+import { PROJECT_COLOR_HEX } from '@/modules/project/domain/types';
 
 interface TaskCardProps {
   taskTitle: string | null;

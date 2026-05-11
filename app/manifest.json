@@ -12,16 +12,20 @@
   ],
   "host_permissions": ["<all_urls>"],
   "background": {
-    "scripts": ["background/index.js"],
+    "scripts": ["src/background/index.ts"],
     "type": "module"
   },
   "action": {
-    "default_popup": "popup/index.html",
+    "default_popup": "src/popup/index.html",
     "default_title": "FocusFox"
   },
   "web_accessible_resources": [
     {
-      "resources": ["blocked/index.html", "blocked/*.js", "blocked/*.css"],
+      "resources": ["src/blocked/index.html", "src/blocked/*.js", "src/blocked/*.css"],
+      "matches": ["<all_urls>"]
+    },
+    {
+      "resources": ["src/dashboard/index.html", "src/dashboard/*.js", "src/dashboard/*.css"],
       "matches": ["<all_urls>"]
     }
   ],

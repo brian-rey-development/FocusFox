@@ -5,6 +5,7 @@ import type { Task, TaskStatus } from '../domain/types';
 
 export interface TaskService {
   list(projectId: string): Promise<Task[]>;
+  listAll(projectIds: string[]): Promise<Task[]>;
   create(input: unknown): Promise<Task>;
   update(id: string, patch: unknown): Promise<Task>;
   setStatus(id: string, status: unknown): Promise<Task>;
@@ -15,13 +16,17 @@ export interface TaskService {
 const ALLOWED_TRANSITIONS: Record<TaskStatus, readonly TaskStatus[]> = {
   todo: ['doing'],
   doing: ['done'],
-  done: [],
+  done: ['todo'],
 };
 
 export function createTaskService(db: DB): TaskService {
   return {
     async list(projectId) {
       return db.tasks.list(projectId);
+    },
+
+    async listAll(projectIds) {
+      return db.tasks.listAll(projectIds);
     },
 
     async create(input) {

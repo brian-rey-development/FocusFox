@@ -1,12 +1,14 @@
 export function formatMs(ms: number): string {
-  const totalSeconds = Math.floor(ms / 1000);
+  if (!Number.isFinite(ms)) return '--:--';
+  const totalSeconds = Math.floor(Math.max(0, ms) / 1000);
   const minutes = Math.floor(totalSeconds / 60);
   const seconds = totalSeconds % 60;
   return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
 }
 
 export function formatMsShort(ms: number): string {
-  const totalMinutes = Math.floor(ms / 60000);
+  if (!Number.isFinite(ms)) return '--';
+  const totalMinutes = Math.floor(Math.max(0, ms) / 60000);
   if (totalMinutes < 60) return `${totalMinutes}m`;
   const hours = Math.floor(totalMinutes / 60);
   const mins = totalMinutes % 60;
@@ -17,10 +19,14 @@ export function formatDate(dayKey: string): string {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(dayKey)) return dayKey;
   const [y, m, d] = dayKey.split('-').map(Number);
   const date = new Date(y, m - 1, d);
+  if (date.getFullYear() !== y || date.getMonth() !== m - 1 || date.getDate() !== d) {
+    return dayKey;
+  }
   return date.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
 }
 
 export function relativeTime(ms: number): string {
+  if (!Number.isFinite(ms)) return '--';
   const diff = Date.now() - ms;
   const minutes = Math.floor(diff / 60000);
   if (minutes < 1) return 'ahora';

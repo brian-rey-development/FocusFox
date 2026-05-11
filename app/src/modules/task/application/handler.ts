@@ -6,6 +6,7 @@ export function createTaskHandlers(
 ): Record<string, HandlerFn> {
   return {
     'task:list': (payload) => svc.list((payload as { projectId: string }).projectId),
+    'task:listAll': (payload) => svc.listAll((payload as { projectIds: string[] }).projectIds),
     'task:create': (payload) => svc.create(payload),
     'task:update': (payload) => {
       const { id, patch } = payload as { id: string; patch: unknown };

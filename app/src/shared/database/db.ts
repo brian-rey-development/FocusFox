@@ -17,7 +17,7 @@ export async function openDB(): Promise<DB> {
       migrate(db, oldVersion);
 
       if (oldVersion < 1) {
-        transaction.objectStore('settings').add({
+        transaction.objectStore('settings').put({
           id: 'default',
           ...DEFAULT_SETTINGS,
         });
@@ -35,7 +35,7 @@ export async function openDB(): Promise<DB> {
         await tx.objectStore(store).clear();
       }
       await tx.done;
-      await db.add('settings', { id: 'default', ...DEFAULT_SETTINGS });
+      await db.put('settings', { id: 'default', ...DEFAULT_SETTINGS });
     },
     projects: createProjectRepo(db),
     tasks: createTaskRepo(db),

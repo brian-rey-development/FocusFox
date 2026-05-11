@@ -77,7 +77,7 @@ describe('TaskService', () => {
     await expect(svc.setStatus(task.id, 'todo')).rejects.toThrow();
   });
 
-  it('reverts done to anything', async () => {
+  it('allows reverting done to todo but rejects done to doing', async () => {
     const db = await createFreshDB();
     const svc = createTaskService(db);
 
@@ -85,8 +85,13 @@ describe('TaskService', () => {
     await svc.setStatus(task.id, 'doing');
     await svc.setStatus(task.id, 'done');
 
-    await expect(svc.setStatus(task.id, 'todo')).rejects.toThrow();
-    await expect(svc.setStatus(task.id, 'doing')).rejects.toThrow();
+    const reopened = await svc.setStatus(task.id, 'todo');
+    expect(reopened.status).toBe('todo');
+
+    const task2 = await svc.create({ projectId: 'proj-1', title: 'Test 2' });
+    await svc.setStatus(task2.id, 'doing');
+    await svc.setStatus(task2.id, 'done');
+    await expect(svc.setStatus(task2.id, 'doing')).rejects.toThrow();
   });
 
   it('deletes a task', async () => {

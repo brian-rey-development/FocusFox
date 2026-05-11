@@ -8,6 +8,8 @@ import { ManualDistractionInput } from '../components/ManualDistractionInput';
 import { Actions } from '../components/Actions';
 import { CancelConfirm } from '../components/CancelConfirm';
 
+const noop = () => {};
+
 function findTask(tasks: Task[], active: ActivePomodoro): Task | undefined {
   return tasks.find((t) => t.id === active.taskId);
 }
@@ -60,7 +62,7 @@ export function ActiveView() {
       ) : (
         <Actions
           kind="active"
-          onPrimary={() => {}}
+          onPrimary={noop}
           onSecondary={() => setShowCancelConfirm(true)}
         />
       )}

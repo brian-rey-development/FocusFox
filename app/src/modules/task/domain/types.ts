@@ -8,7 +8,7 @@ export const TaskSchema = z.object({
   projectId: z.string(),
   title: z.string().min(1),
   status: TaskStatusSchema,
-  estimatedPomodoros: z.number().int().positive().nullable(),
+  estimatedPomodoros: z.number().int().min(1).max(20).nullable(),
   completedPomodoros: z.number().int().nonnegative(),
   createdAt: z.number(),
   updatedAt: z.number(),
@@ -20,7 +20,7 @@ export type Task = z.infer<typeof TaskSchema>;
 export const CreateTaskSchema = z.object({
   projectId: z.string(),
   title: z.string().min(1),
-  estimatedPomodoros: z.number().int().positive().nullable().optional().default(null),
+  estimatedPomodoros: z.number().int().min(1).max(20).nullable().optional().default(null),
 });
 
 export type CreateTaskInput = z.infer<typeof CreateTaskSchema>;

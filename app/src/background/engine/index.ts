@@ -1,5 +1,6 @@
 import { NotFoundError } from '@/shared/errors';
 import { dayKey } from '@/shared/time';
+import { DEFAULT_SETTINGS } from '@/shared/constants';
 import type { DB } from '@/shared/database/types';
 import type { Task } from '@/modules/task/domain/types';
 import type { Project } from '@/modules/project/domain/types';
@@ -19,14 +20,8 @@ import type {
 import { loadEngineState, saveEngineState } from './persistence';
 
 const POMODORO_TRANSITION_ALARM = 'pomodoro_transition';
-const DEFAULT_SETTINGS_SNAPSHOT = {
-  workMs: 25 * 60_000,
-  shortBreakMs: 5 * 60_000,
-  longBreakMs: 15 * 60_000,
-  longBreakEvery: 4,
-  autoStartBreaks: true,
-  autoStartNextWork: false,
-};
+const { allowlist: _, ...DEFAULT_SETTINGS_SNAPSHOT } = DEFAULT_SETTINGS;
+export { DEFAULT_SETTINGS_SNAPSHOT };
 
 function defaultState(): EngineState {
   return {
@@ -62,7 +57,7 @@ export interface PomodoroEngine {
   handleCompletion(): Promise<void>;
   handleDailyReset(): Promise<void>;
   getTick(): Promise<Tick>;
-  recordDistraction(pomodoroId: string): void;
+  recordDistraction(pomodoroId: string): Promise<void>;
   invalidateSettings(): void;
   currentPhase(): EnginePhase;
   currentPomodoroId(): string | null;
@@ -83,6 +78,11 @@ export function createPomodoroEngine(deps: Deps): PomodoroEngine {
   let state = defaultState();
   let cachedTaskInfo: TickTaskInfo | null = null;
   let cachedSettings: typeof DEFAULT_SETTINGS_SNAPSHOT | null = null;
+  let transitioning = false;
+
+  function logCatch(context: string, e: unknown) {
+    console.warn(`[FocusFox] engine: ${context}:`, e);
+  }
 
   function getCachedSettings() {
     return cachedSettings ?? DEFAULT_SETTINGS_SNAPSHOT;
@@ -93,7 +93,8 @@ export function createPomodoroEngine(deps: Deps): PomodoroEngine {
     try {
       cachedSettings = await deps.settingsSvc.get();
       return cachedSettings;
-    } catch {
+    } catch (e) {
+      logCatch('getSettings', e);
       return DEFAULT_SETTINGS_SNAPSHOT;
     }
   }
@@ -159,7 +160,8 @@ export function createPomodoroEngine(deps: Deps): PomodoroEngine {
     try {
       await deps.pomodoroSvc.finish(state.pomodoroId, completedFully, state.distractionCountSession);
       return true;
-    } catch {
+    } catch (e) {
+      logCatch('finishPomodoro', e);
       return false;
     }
   }
@@ -185,8 +187,8 @@ export function createPomodoroEngine(deps: Deps): PomodoroEngine {
   async function addAutoNote(text: string): Promise<void> {
     try {
       await deps.noteSvc.add({ day: dayKey(Date.now()), kind: 'auto', text });
-    } catch {
-      // Best-effort: auto-notes are non-critical
+    } catch (e) {
+      logCatch('addAutoNote', e);
     }
   }
 
@@ -342,20 +344,27 @@ export function createPomodoroEngine(deps: Deps): PomodoroEngine {
 
     async recover() {
       if (state.phase === 'idle') return;
+      if (state.startedAt === null) {
+        console.error('[FocusFox] engine: corrupt state - non-idle with null startedAt. Resetting.');
+        state = defaultState();
+        await persist();
+        return;
+      }
 
-      const elapsed = Date.now() - (state.startedAt ?? 0);
+      const elapsed = Date.now() - state.startedAt;
 
       if (elapsed >= state.plannedDurationMs) {
         try {
           await this.handleCompletion();
-        } catch {
+        } catch (e) {
+          logCatch('recover handleCompletion', e);
           await transitionTo('idle');
           await resetToIdle();
         }
         return;
       }
 
-      await scheduleTransitionAlarm((state.startedAt ?? 0) + state.plannedDurationMs);
+      await scheduleTransitionAlarm(state.startedAt + state.plannedDurationMs);
     },
 
     async start(taskId) {
@@ -380,7 +389,7 @@ export function createPomodoroEngine(deps: Deps): PomodoroEngine {
     },
 
     async cancel() {
-      if (state.phase === 'idle') return { ok: false };
+      if (state.phase === 'idle') return { ok: false, error: 'not_running' } as const;
       await doCancel();
       return { ok: true };
     },
@@ -408,13 +417,19 @@ export function createPomodoroEngine(deps: Deps): PomodoroEngine {
     },
 
     async handleCompletion() {
-      if (state.phase === 'work') {
-        await completeWork();
-      } else if (state.phase === 'short_break' || state.phase === 'long_break') {
-        await completeBreak();
-      } else {
-        await transitionTo('idle');
-        await resetToIdle();
+      if (transitioning) return;
+      transitioning = true;
+      try {
+        if (state.phase === 'work') {
+          await completeWork();
+        } else if (state.phase === 'short_break' || state.phase === 'long_break') {
+          await completeBreak();
+        } else {
+          await transitionTo('idle');
+          await resetToIdle();
+        }
+      } finally {
+        transitioning = false;
       }
     },
 
@@ -425,7 +440,7 @@ export function createPomodoroEngine(deps: Deps): PomodoroEngine {
 
     invalidateSettings() {
       cachedSettings = null;
-      getSettings().catch(() => {});
+      getSettings().catch((e) => logCatch('invalidateSettings prefetch', e));
     },
 
     async getTick(): Promise<Tick> {
@@ -441,10 +456,14 @@ export function createPomodoroEngine(deps: Deps): PomodoroEngine {
       };
     },
 
-    recordDistraction(pomodoroId) {
+    async recordDistraction(pomodoroId) {
       if (state.pomodoroId === pomodoroId && state.phase === 'work') {
         state.distractionCountSession += 1;
-        persist().catch(() => {});
+        try {
+          await persist();
+        } catch (e) {
+          logCatch('recordDistraction persist', e);
+        }
       }
     },
 

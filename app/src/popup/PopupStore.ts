@@ -99,10 +99,10 @@ export const usePopupStore = create<PopupState & PopupActions>((set, get) => ({
 
       const nonArchived = projectsList.filter((p) => !p.archived);
       if (nonArchived.length > 0) {
-        const allTasks = await Promise.all(
-          nonArchived.map((p) => sendMessage<Task[]>('task:list', { projectId: p.id })),
-        );
-        const tasksList = allTasks.flat().filter((t) => t.status !== 'done');
+        const allTasks = await sendMessage<Task[]>('task:listAll', {
+          projectIds: nonArchived.map((p) => p.id),
+        });
+        const tasksList = allTasks.filter((t) => t.status !== 'done');
         const firstTask = tasksList[0] ?? null;
         set({
           tasks: tasksList,

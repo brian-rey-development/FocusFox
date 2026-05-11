@@ -6,6 +6,7 @@ export function createNoteHandlers(
 ): Record<string, HandlerFn> {
   return {
     'note:listForDay': (payload) => svc.listForDay((payload as { day: string }).day),
+    'notes:listDay': (payload) => svc.listForDay((payload as { day: string }).day),
     'note:add': (payload) => svc.add(payload),
     'note:update': (payload) => {
       const { id, patch } = payload as { id: string; patch: unknown };
