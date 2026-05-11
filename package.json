@@ -1,0 +1,9 @@
+{
+	"scripts": {
+		"build": "pnpm --prefix app build",
+		"package": "pnpm build && web-ext build --source-dir app/dist --artifacts-dir artifacts"
+	},
+	"devDependencies": {
+		"web-ext": "^10.1.0"
+	}
+}
