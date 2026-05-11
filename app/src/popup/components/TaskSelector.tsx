@@ -51,6 +51,7 @@ export function TaskSelector({ projects, tasks, selectedTaskId, onSelectTask }: 
         value={selectedTaskId ?? ''}
         onChange={(e) => onSelectTask(e.target.value)}
       >
+        <option value="" disabled>Seleccioná una tarea...</option>
         {nonArchived.map((project) => {
           const projectTasks = tasks.filter((t) => t.projectId === project.id);
           if (projectTasks.length === 0) return null;

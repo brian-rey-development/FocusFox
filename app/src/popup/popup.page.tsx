@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import { ErrorBoundary } from '@/shared/components/ErrorBoundary';
 import { connectPort } from '@/shared/messages';
@@ -12,6 +12,12 @@ import { ActiveView } from './views/ActiveView';
 import { BreakView } from './views/BreakView';
 import './popup.css';
 
+const PHASE_ANNOUNCEMENTS: Partial<Record<string, string>> = {
+  active: 'Pomodoro iniciado',
+  break: 'Descanso iniciado',
+  idle: 'Pomodoro finalizado',
+};
+
 function App() {
   const phase = usePopupStore((s) => s.phase);
   const error = usePopupStore((s) => s.error);
@@ -21,6 +27,16 @@ function App() {
   const setError = usePopupStore((s) => s.setError);
   const retry = usePopupStore((s) => s.retry);
   const portRef = useRef<browser.runtime.Port | null>(null);
+  const [announcement, setAnnouncement] = useState('');
+  const prevPhaseRef = useRef(phase);
+
+  useEffect(() => {
+    if (phase !== prevPhaseRef.current) {
+      prevPhaseRef.current = phase;
+      const msg = PHASE_ANNOUNCEMENTS[phase];
+      if (msg) setAnnouncement(msg);
+    }
+  }, [phase]);
 
   useEffect(() => {
     let cancelled = false;
@@ -60,6 +76,14 @@ function App() {
 
   return (
     <>
+      <div
+        role="status"
+        aria-live="polite"
+        aria-atomic="true"
+        className="sr-only"
+      >
+        {announcement}
+      </div>
       <Header phase={phase} />
       <main className="popup-content">
         {phase === 'loading' && <LoadingView />}

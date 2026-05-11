@@ -61,6 +61,8 @@ function buildActive(tick: TickPayload): ActivePomodoro | null {
   };
 }
 
+let taskRefreshing = false;
+
 export const usePopupStore = create<PopupState & PopupActions>((set, get) => ({
   phase: 'loading',
   projects: [],
@@ -120,13 +122,16 @@ export const usePopupStore = create<PopupState & PopupActions>((set, get) => ({
 
       if (taskChanged || state.tasks.length === 0) {
         const project = state.projects.find((p) => p.id === active.projectId);
-        if (project) {
+        if (project && !taskRefreshing) {
+          taskRefreshing = true;
           sendMessage<Task[]>('task:list', { projectId: active.projectId }).then((tasks) => {
             const activeTasks = Array.isArray(tasks) ? tasks.filter((task) => task.status !== 'done') : [];
             set({ tasks: activeTasks });
           }).catch((e) => {
             console.error('[FocusFox]', e);
             set({ phase: 'error', error: 'No se pudieron cargar las tareas' });
+          }).finally(() => {
+            taskRefreshing = false;
           });
         }
       }
