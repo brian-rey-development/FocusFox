@@ -47,7 +47,7 @@ export function ActiveView() {
       />
       {showManualInput && (
         <ManualDistractionInput
-          onSubmit={(reason) => recordDistraction(reason)}
+          onSubmit={(reason) => { recordDistraction(reason); setShowManualInput(false); }}
           onCancel={() => setShowManualInput(false)}
         />
       )}

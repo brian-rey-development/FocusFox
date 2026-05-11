@@ -61,12 +61,16 @@ export function registerBlocker(
       const pomodoroId = engine.currentPomodoroId();
       const domain = decision.domain;
 
+      if (!pomodoroId) return {};
+
       distractionSvc.record({
-        pomodoroId: pomodoroId ?? '',
+        pomodoroId,
         type: 'auto_blocked_attempt' as const,
         url: details.url,
         domain,
       }).catch((e) => { console.error('[FocusFox]', e); });
+
+      engine.recordDistraction(pomodoroId).catch((e) => { console.error('[FocusFox]', e); });
 
       return {
         redirectUrl: buildBlockedUrl(details.url, domain, blockedPageBase),
