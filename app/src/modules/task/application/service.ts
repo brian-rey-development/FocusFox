@@ -20,7 +20,7 @@ interface TaskServiceDeps {
 
 const ALLOWED_TRANSITIONS: Record<TaskStatus, readonly TaskStatus[]> = {
   todo: ['doing'],
-  doing: ['done'],
+  doing: ['done', 'todo'],
   done: ['todo'],
 };
 

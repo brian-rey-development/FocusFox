@@ -58,8 +58,7 @@ export function createProjectRepo(db: IDBPDatabase<FocusFoxDB>): ProjectRepo {
         throw new NotFoundError('Project', id);
       }
 
-      existing.archived = true;
-      await store.put(existing);
+      await store.put({ ...existing, archived: true });
       await tx.done;
     },
 
@@ -72,8 +71,7 @@ export function createProjectRepo(db: IDBPDatabase<FocusFoxDB>): ProjectRepo {
         throw new NotFoundError('Project', id);
       }
 
-      existing.archived = false;
-      await store.put(existing);
+      await store.put({ ...existing, archived: false });
       await tx.done;
     },
   };

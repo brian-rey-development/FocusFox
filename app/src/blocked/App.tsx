@@ -152,7 +152,7 @@ export function App() {
     );
   }
 
-  const todayValue = today ?? { workPomodoros: 0, distractions: 0 };
+  const todayValue = today ?? { workPomodoros: 0, distractions: 0, focusMinutes: 0, deltaVs30dAvg: 0 };
 
   return (
     <Stage>

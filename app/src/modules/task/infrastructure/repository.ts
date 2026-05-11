@@ -75,9 +75,7 @@ export function createTaskRepo(db: IDBPDatabase<FocusFoxDB>): TaskRepo {
         throw new NotFoundError('Task', taskId);
       }
 
-      task.completedPomodoros += 1;
-      task.updatedAt = Date.now();
-      await store.put(task);
+      await store.put({ ...task, completedPomodoros: task.completedPomodoros + 1, updatedAt: Date.now() });
       await tx.done;
     },
 

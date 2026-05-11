@@ -9,8 +9,12 @@ export interface MetaService {
 
 export function createMetaService(db: DB): MetaService {
   return {
-    get: db.meta.get,
-    set: db.meta.set,
+    async get<T = unknown>(key: string): Promise<T | null> {
+      return db.meta.get<T>(key);
+    },
+    async set<T = unknown>(key: string, value: T): Promise<void> {
+      return db.meta.set(key, value);
+    },
     async getFooter(version: string): Promise<FooterMeta> {
       const [projectCount, taskCount, pomodoroCount, schemaVersion, lastExportAt] = await Promise.all([
         db.raw.count('projects'),

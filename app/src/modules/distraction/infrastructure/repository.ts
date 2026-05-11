@@ -29,13 +29,16 @@ export function createDistractionRepo(db: IDBPDatabase<FocusFoxDB>): Distraction
     },
 
     async recentAutoForDomain(pomodoroId, domain, withinMs) {
-      const tx = db.transaction('distractions', 'readonly');
-      const index = tx.store.index('by_pomodoro');
-      const all = await index.getAll(pomodoroId);
       const cutoff = Date.now() - withinMs;
+      const tx = db.transaction('distractions', 'readonly');
+      const index = tx.store.index('by_at');
+      const recent = await index.getAll(IDBKeyRange.lowerBound(cutoff));
 
-      const match = all.find(
-        (d) => d.type === 'auto_blocked_attempt' && d.domain === domain && d.at >= cutoff,
+      const match = recent.find(
+        (d) =>
+          d.pomodoroId === pomodoroId &&
+          d.type === 'auto_blocked_attempt' &&
+          d.domain === domain,
       );
 
       return match ?? null;

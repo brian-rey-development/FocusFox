@@ -81,8 +81,9 @@ export function computeStreakStats(
   // Current streak: walk backwards from today
   let currentDays = 0;
   let day = today;
+  let maxIter = 10_000;
 
-  while (true) {
+  while (maxIter-- > 0) {
     const count = dayPomodoroCounts.get(day) ?? 0;
     if (count >= 1) {
       currentDays++;

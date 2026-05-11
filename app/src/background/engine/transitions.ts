@@ -234,9 +234,18 @@ export function createTransitions(deps: Deps, h: TransitionHelpers) {
     if (!pomodoroId) return;
 
     const from = state.phase;
+    const taskId = state.taskId;
     await finishPomodoro(false);
-    h.broadcast({ type: 'pomodoro.cancelled', pomodoroId });
 
+    if (taskId) {
+      try {
+        await deps.taskSvc.setStatus(taskId, 'todo');
+      } catch (e) {
+        console.warn('[FocusFox] engine: doCancel - failed to revert task status:', e);
+      }
+    }
+
+    h.broadcast({ type: 'pomodoro.cancelled', pomodoroId });
     await transitionToIdle(from);
   }
 
