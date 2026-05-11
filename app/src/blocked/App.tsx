@@ -26,7 +26,6 @@ function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
 const { originalUrl: INITIAL_URL, domain: INITIAL_DOMAIN } = parseBlockedParams(window.location.search);
 
 export function App() {
-  const domain = INITIAL_DOMAIN;
   const [mounted, setMounted] = useState(false);
   const portRef = useRef<browser.runtime.Port | null>(null);
   const originalUrlRef = useRef(INITIAL_URL);
@@ -104,7 +103,7 @@ export function App() {
   }, [setSnapshot, setRemainingMs, setToday, setStreakDays, setError]);
 
   useEffect(() => {
-    mount();
+    void mount();
 
     return () => {
       if (portRef.current) {
@@ -115,9 +114,18 @@ export function App() {
   }, [mount]);
 
   async function handleCancel(): Promise<void> {
-    const response = (await browser.runtime.sendMessage({ type: 'pomodoro:cancel' })) as { ok?: boolean };
-    if (response?.ok) {
-      window.location.replace(safeRedirectUrl(originalUrlRef.current, 'about:blank'));
+    try {
+      const response = await browser.runtime.sendMessage({ type: 'pomodoro:cancel' });
+      if (
+        response !== null &&
+        typeof response === 'object' &&
+        'ok' in response &&
+        (response as { ok: boolean }).ok
+      ) {
+        window.location.replace(safeRedirectUrl(originalUrlRef.current, 'about:blank'));
+      }
+    } catch {
+      // ignore cancel errors - the session may already be done
     }
   }
 
@@ -133,7 +141,7 @@ export function App() {
           <div className="task-time-card__left">
             <span className="task-time-card__label">Tarea actual</span>
             <span className="task-time-card__title blocked-skeleton">---</span>
-            <span className="task-time-card__meta blocked-skeleton">{domain}</span>
+            <span className="task-time-card__meta blocked-skeleton">{INITIAL_DOMAIN}</span>
           </div>
           <div className="task-time-card__right">
             <span className="task-time-card__time blocked-skeleton">--:--</span>
@@ -161,7 +169,7 @@ export function App() {
       />
       <TodayMiniStats today={todayValue} streakDays={streakDays} />
       <CancelLink onCancel={handleCancel} />
-      <AttemptedUrl url={domain} />
+      <AttemptedUrl url={INITIAL_DOMAIN} />
     </Stage>
   );
 }

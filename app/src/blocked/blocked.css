@@ -258,6 +258,12 @@ button:focus-visible {
 /* --- Skeleton loading state --- */
 .blocked-skeleton {
   opacity: 0.35;
+  animation: skeleton-pulse 1.5s ease-in-out infinite alternate;
+}
+
+@keyframes skeleton-pulse {
+  from { opacity: 0.2; }
+  to { opacity: 0.45; }
 }
 
 /* --- Attempted URL --- */
@@ -322,6 +328,9 @@ button:focus-visible {
 
 @media (prefers-reduced-motion: reduce) {
   .error-toast {
+    animation: none;
+  }
+  .blocked-skeleton {
     animation: none;
   }
   .cancel-link__btn,
