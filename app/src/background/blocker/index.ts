@@ -68,9 +68,13 @@ export function registerBlocker(
         type: 'auto_blocked_attempt' as const,
         url: details.url,
         domain,
-      }).catch((e) => { console.error('[FocusFox]', e); });
-
-      engine.recordDistraction(pomodoroId).catch((e) => { console.error('[FocusFox]', e); });
+      })
+        .then((distraction) => {
+          if (Date.now() - distraction.at < 1000) {
+            engine.recordDistraction(pomodoroId).catch(e => console.error('[FocusFox]', e));
+          }
+        })
+        .catch(e => console.error('[FocusFox]', e));
 
       return {
         redirectUrl: buildBlockedUrl(details.url, domain, blockedPageBase),
