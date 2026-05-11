@@ -12,5 +12,9 @@ export function createMetaHandlers(
       const { key, value } = parsePayload(payload, z.object({ key: z.string(), value: z.unknown() }));
       return svc.set(key, value);
     },
+    'meta:getFooter': () => {
+      const { version } = browser.runtime.getManifest() as { version: string };
+      return svc.getFooter(version);
+    },
   };
 }

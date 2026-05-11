@@ -164,12 +164,8 @@ function setupMessageRouter(db: DB, svc: Services) {
   const settingsHandlers = wrapHandler(createSettingsHandlers(svc.settingsSvc), {
     'settings:update': async () => {
       engine.invalidateSettings();
-      try {
-        const s = await svc.settingsSvc.get();
-        setAllowlist(s.allowlist);
-      } catch (e) {
-        logError('settings:update after-hook', e);
-      }
+      const s = await svc.settingsSvc.get();
+      setAllowlist(s.allowlist);
     },
   });
 
@@ -194,22 +190,6 @@ function setupMessageRouter(db: DB, svc: Services) {
       const { pomodoroId } = payload as { pomodoroId: string };
       engine.recordDistraction(pomodoroId).catch((e: unknown) => logError('distraction:record after-hook', e));
       return result;
-    },
-    'meta:getFooter': async () => {
-      const manifest = browser.runtime.getManifest() as { version: string };
-      const [projectCount, taskCount, pomodoroCount, schemaVersion, lastExportAt] = await Promise.all([
-        db.raw.count('projects'),
-        db.raw.count('tasks'),
-        db.raw.count('pomodoros'),
-        svc.metaSvc.get<number>('schemaVersion'),
-        svc.metaSvc.get<number>('lastExportAt'),
-      ]);
-      return {
-        version: manifest.version,
-        schemaVersion: schemaVersion ?? 1,
-        counts: { projects: projectCount, tasks: taskCount, pomodoros: pomodoroCount },
-        lastExportAt: lastExportAt ?? null,
-      };
     },
   };
 

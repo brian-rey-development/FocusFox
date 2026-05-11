@@ -8,7 +8,6 @@ export function createNoteHandlers(
 ): Record<string, HandlerFn> {
   return {
     'note:listForDay': (payload) => svc.listForDay(parsePayload(payload, z.object({ day: z.string() })).day),
-    'notes:listDay': (payload) => svc.listForDay(parsePayload(payload, z.object({ day: z.string() })).day),
     'note:add': (payload) => svc.add(payload),
     'note:update': (payload) => {
       const { id, patch } = parsePayload(payload, z.object({ id: z.string(), patch: z.unknown() }));

@@ -13,3 +13,10 @@ export const MetaSetSchema = z.object({
 });
 
 export type MetaSetInput = z.infer<typeof MetaSetSchema>;
+
+export interface FooterMeta {
+  version: string;
+  schemaVersion: number;
+  counts: { projects: number; tasks: number; pomodoros: number };
+  lastExportAt: number | null;
+}

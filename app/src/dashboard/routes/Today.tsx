@@ -18,7 +18,7 @@ export const TodayView = forwardRef<{ focusInput: () => void }>(function TodayVi
 
   const fetchNotes = useCallback(async () => {
     try {
-      const data = await sendMessage<NoteEntry[]>('notes:listDay', { day: today });
+      const data = await sendMessage<NoteEntry[]>('note:listForDay', { day: today });
       setNotes(data);
     } catch (e) {
       console.error('[FocusFox]', e);
