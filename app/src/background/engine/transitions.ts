@@ -80,25 +80,19 @@ export function createTransitions(deps: Deps, h: TransitionHelpers) {
     }
   }
 
-  async function transitionTo(next: EnginePhase): Promise<void> {
-    const state = h.getState();
-    const from = state.phase;
-    const clone = cloneState(state);
-    clone.phase = next;
-    h.setState(clone);
-    await h.persist();
-    h.broadcast({ type: 'pomodoro.state_change', from, to: next, at: Date.now() });
-  }
-
-  async function resetToIdle(): Promise<void> {
-    const state = h.getState();
-    state.pomodoroId = null;
-    state.taskId = null;
-    state.startedAt = null;
-    state.plannedDurationMs = 0;
-    state.distractionCountSession = 0;
+  async function transitionToIdle(from: EnginePhase): Promise<void> {
+    h.setState({
+      phase: 'idle',
+      pomodoroId: null,
+      taskId: null,
+      startedAt: null,
+      plannedDurationMs: 0,
+      cycleIndex: h.getState().cycleIndex,
+      distractionCountSession: 0,
+    });
     h.setCachedTaskInfo(null);
     await h.persist();
+    h.broadcast({ type: 'pomodoro.state_change', from, to: 'idle', at: Date.now() });
   }
 
   async function finishPomodoro(completedFully: boolean): Promise<boolean> {
@@ -198,8 +192,7 @@ export function createTransitions(deps: Deps, h: TransitionHelpers) {
     const finished = await finishPomodoro(true);
     if (!finished) {
       await h.clearTransitionAlarm();
-      await transitionTo('idle');
-      await resetToIdle();
+      await transitionToIdle(state.phase);
       return;
     }
 
@@ -216,8 +209,7 @@ export function createTransitions(deps: Deps, h: TransitionHelpers) {
       await startBreak(breakKind, breakMs);
     } else {
       await h.clearTransitionAlarm();
-      await transitionTo('idle');
-      await resetToIdle();
+      await transitionToIdle(state.phase);
     }
   }
 
@@ -235,8 +227,7 @@ export function createTransitions(deps: Deps, h: TransitionHelpers) {
         return;
       }
     }
-    await transitionTo('idle');
-    await resetToIdle();
+    await transitionToIdle(h.getState().phase);
   }
 
   async function doCancel(): Promise<void> {
@@ -244,13 +235,13 @@ export function createTransitions(deps: Deps, h: TransitionHelpers) {
     const pomodoroId = state.pomodoroId;
     if (!pomodoroId) return;
 
+    const from = state.phase;
     await finishPomodoro(false);
     h.broadcast({ type: 'pomodoro.cancelled', pomodoroId });
 
     await h.clearTransitionAlarm();
-    await transitionTo('idle');
-    await resetToIdle();
+    await transitionToIdle(from);
   }
 
-  return { startWork, completeWork, startBreak, completeBreak, doCancel, finishPomodoro, cacheTaskInfo, fetchProjects };
+  return { startWork, completeWork, startBreak, completeBreak, doCancel, finishPomodoro, cacheTaskInfo, fetchProjects, transitionToIdle };
 }

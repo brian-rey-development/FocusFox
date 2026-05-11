@@ -177,10 +177,7 @@ export function createPomodoroEngine(deps: Deps): PomodoroEngine {
         }
 
         const from = state.phase;
-        state = defaultState();
-        cachedTaskInfo = null;
-        await persist();
-        broadcast({ type: 'pomodoro.state_change', from, to: 'idle', at: Date.now() });
+        await transitions.transitionToIdle(from);
 
         return { ok: true as const };
       } finally {
@@ -207,8 +204,14 @@ export function createPomodoroEngine(deps: Deps): PomodoroEngine {
     },
 
     async handleDailyReset() {
-      state.cycleIndex = 1;
-      await persist();
+      if (transitioning) return;
+      transitioning = true;
+      try {
+        helpers.setState({ ...state, cycleIndex: 1 });
+        await persist();
+      } finally {
+        transitioning = false;
+      }
     },
 
     invalidateSettings() {
