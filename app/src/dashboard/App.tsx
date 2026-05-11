@@ -12,6 +12,7 @@ import { TodayView } from './routes/Today';
 import { TasksView } from './routes/Tasks';
 import { SettingsView } from './routes/Settings';
 import { StatsView } from './routes/Stats';
+import { ProjectCreateModal } from './components/ProjectCreateModal';
 
 export function App() {
   const [route, navigate] = useHashRoute();
@@ -24,6 +25,7 @@ export function App() {
   const setTab = useDashStore((s) => s.setTab);
   const pushToast = useDashStore((s) => s.pushToast);
   const [showCheatsheet, setShowCheatsheet] = useState(false);
+  const [showCreateProject, setShowCreateProject] = useState(false);
   const portRef = useRef<browser.runtime.Port | null>(null);
   const todayRef = useRef<{ focusInput: () => void }>(null);
   const tasksRef = useRef<{ focusInput: () => void }>(null);
@@ -128,7 +130,7 @@ export function App() {
             tick={tick}
             onNavigate={navigate}
             onSelectProject={setSelectedProject}
-            onCreateProject={() => navigate('settings', { projectId: 'create' })}
+            onCreateProject={() => setShowCreateProject(true)}
           />
         }
         topbar={
@@ -166,6 +168,16 @@ export function App() {
           </div>
         </div>
       )}
+      <ProjectCreateModal
+        open={showCreateProject}
+        onClose={() => setShowCreateProject(false)}
+        onCreated={(project) => {
+          setShowCreateProject(false);
+          fetchProjects();
+          setSelectedProject(project.id);
+          navigate('tareas', { projectId: project.id });
+        }}
+      />
     </>
   );
 }
