@@ -60,6 +60,9 @@ export function createTaskService({ db, getActivePomodoroTaskId }: TaskServiceDe
       if (newStatus === 'done') {
         patch.doneAt = Date.now();
       }
+      if (newStatus === 'todo') {
+        patch.doneAt = null;
+      }
       return db.tasks.update(id, patch);
     },
 

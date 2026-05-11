@@ -14,8 +14,9 @@ import type {
   RangeDays,
 } from '../domain/types';
 
-const STREAK_LOOKBACK_MS = 365 * 86_400_000;
-const PRIOR_30D_MS = 30 * 86_400_000;
+const DAY_MS = 86_400_000;
+const STREAK_LOOKBACK_MS = 365 * DAY_MS;
+const PRIOR_30D_MS = 30 * DAY_MS;
 
 export function computeTodayStats(
   workPomodoros: Pomodoro[],
@@ -104,7 +105,9 @@ export function computeStreakStats(
   const sortedDays = [...dayPomodoroCounts.keys()].sort();
   let cursor = sortedDays[0];
 
-  while (cursor <= today) {
+  // bounded by STREAK_LOOKBACK_MS (≤366 iterations)
+  let maxIter2 = 10_000;
+  while (maxIter2-- > 0 && cursor <= today) {
     if (dayPomodoroCounts.has(cursor)) {
       currentRun++;
       longestDays = Math.max(longestDays, currentRun);
@@ -169,7 +172,7 @@ export function createStatsService(db: DB): StatsService {
       const distractionsCount = workPomodoros.reduce((sum, p) => sum + p.distractionCount, 0);
 
       const priorFromKey = dayKey(Date.now() - PRIOR_30D_MS);
-      const priorToKey = dayKey(Date.now() - 24 * 60 * 60 * 1000);
+      const priorToKey = dayKey(Date.now() - DAY_MS);
       const priorAll = await db.pomodoros.listForRange(priorFromKey, priorToKey);
       const priorWork = filterCompletedWork(priorAll);
 
@@ -241,7 +244,7 @@ export function createStatsService(db: DB): StatsService {
       const priorWeekFrom = offsetDayKey(weekKeys[0], -7);
       const priorWeekTo = offsetDayKey(weekKeys[0], -1);
       const prior30dFrom = dayKey(Date.now() - PRIOR_30D_MS);
-      const prior30dTo = dayKey(Date.now() - 24 * 60 * 60 * 1000);
+      const prior30dTo = dayKey(Date.now() - DAY_MS);
       const streakFrom = dayKey(Date.now() - STREAK_LOOKBACK_MS);
 
       const [rangeAll, todayAll, prior30dAll, currentWeekAll, priorWeekAll, streakAll, projects] =

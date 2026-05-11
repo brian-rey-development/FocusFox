@@ -238,10 +238,9 @@ export function createTransitions(deps: Deps, h: TransitionHelpers) {
     await finishPomodoro(false);
 
     if (taskId) {
-      try {
-        await deps.taskSvc.setStatus(taskId, 'todo');
-      } catch (e) {
-        console.warn('[FocusFox] engine: doCancel - failed to revert task status:', e);
+      const task = await deps.db.tasks.get(taskId).catch(() => null);
+      if (task?.status === 'doing') {
+        await deps.taskSvc.setStatus(taskId, 'todo').catch(e => console.error('[FocusFox] task revert failed', e));
       }
     }
 
