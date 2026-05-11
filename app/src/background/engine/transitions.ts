@@ -130,7 +130,7 @@ export function createTransitions(deps: Deps, h: TransitionHelpers) {
 
     const projects = await fetchProjects();
     await cacheTaskInfo(task, projects);
-    await addAutoNote(`Started pomodoro for task ${task.id}`);
+    await addAutoNote(`Started pomodoro for task ${task.title}`);
 
     await Promise.all([
       h.persist(),

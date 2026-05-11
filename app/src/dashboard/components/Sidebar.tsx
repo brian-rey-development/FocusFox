@@ -25,7 +25,12 @@ export function Sidebar({ tab, projects, selectedProjectId, tick, onNavigate, on
   return (
     <aside className="sidebar" aria-label="Barra lateral">
       <div className="sidebar__brand">
-        <Timer size={20} aria-hidden="true" />
+        <img
+          src={browser.runtime.getURL('icons/icon-32.png')}
+          alt=""
+          className="sidebar__brand-icon"
+          aria-hidden="true"
+        />
         <span>FocusFox</span>
       </div>
 

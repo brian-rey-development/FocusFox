@@ -1,4 +1,4 @@
-import { Timer, LayoutDashboard } from 'lucide-react';
+import { LayoutDashboard } from 'lucide-react';
 import type { Phase } from '../PopupStore';
 
 interface HeaderProps {
@@ -30,7 +30,12 @@ export function Header({ phase }: HeaderProps) {
   return (
     <header className="popup-header">
       <div className="popup-header__brand">
-        <Timer className="popup-header__brand-icon" aria-hidden="true" />
+        <img
+          src={browser.runtime.getURL('icons/icon-32.png')}
+          alt=""
+          className="popup-header__brand-icon"
+          aria-hidden="true"
+        />
         <span>FocusFox</span>
         {phase !== 'loading' && (
           <span className={`popup-header__chip ${CHIP_CLASSES[phase]}`}>

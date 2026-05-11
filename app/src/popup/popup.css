@@ -82,7 +82,7 @@ input:focus-visible {
 .popup-header__brand-icon {
   width: 20px;
   height: 20px;
-  color: var(--color-primary);
+  object-fit: contain;
 }
 
 .popup-header__chip {

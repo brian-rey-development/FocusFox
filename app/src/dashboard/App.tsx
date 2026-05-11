@@ -44,6 +44,12 @@ export function App() {
     }
   }, [setProjects, pushToast]);
 
+  useEffect(() => {
+    if (selectedProjectId) return;
+    const first = projects.find((p) => !p.archived);
+    if (first) setSelectedProject(first.id);
+  }, [projects, selectedProjectId, setSelectedProject]);
+
   const init = useCallback(async () => {
     const port = connectPort('dashboard');
     portRef.current = port;
