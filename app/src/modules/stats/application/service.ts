@@ -14,7 +14,8 @@ import type {
   RangeDays,
 } from '../domain/types';
 
-// --- Pure computation functions (testable without DB) ---
+const STREAK_LOOKBACK_MS = 365 * 86_400_000;
+const PRIOR_30D_MS = 30 * 86_400_000;
 
 export function computeTodayStats(
   workPomodoros: Pomodoro[],
@@ -41,10 +42,7 @@ export function computeWeekStats(
   const workPomodoros = currentWeek.length;
   const priorCount = priorWeek.length;
 
-  let distractions = 0;
-  for (const p of currentWeek) {
-    distractions += p.distractionCount;
-  }
+  const distractions = currentWeek.reduce((sum, p) => sum + p.distractionCount, 0);
 
   const deltaVsPriorWeek = workPomodoros - priorCount;
   const deltaPctVsPriorWeek = priorCount === 0 ? 0 : Math.round((deltaVsPriorWeek / priorCount) * 100);
@@ -147,18 +145,6 @@ export function computeProjectBreakdown(
   return { range: days, items, total };
 }
 
-export function computeStatsSummary(
-  today: TodayStats,
-  week: WeekStats,
-  streak: StreakStats,
-  range: RangeStats,
-  byProject: ProjectBreakdown,
-): StatsSummary {
-  return { today, week, streak, range, byProject };
-}
-
-// --- Service ---
-
 export interface StatsService {
   today(): Promise<TodayStats>;
   week(): Promise<WeekStats>;
@@ -181,7 +167,7 @@ export function createStatsService(db: DB): StatsService {
 
       const distractionsCount = workPomodoros.reduce((sum, p) => sum + p.distractionCount, 0);
 
-      const priorFromKey = dayKey(Date.now() - 30 * 24 * 60 * 60 * 1000);
+      const priorFromKey = dayKey(Date.now() - PRIOR_30D_MS);
       const priorToKey = dayKey(Date.now() - 24 * 60 * 60 * 1000);
       const priorAll = await db.pomodoros.listForRange(priorFromKey, priorToKey);
       const priorWork = filterCompletedWork(priorAll);
@@ -221,7 +207,7 @@ export function createStatsService(db: DB): StatsService {
 
     async streak() {
       const todayKey = dayKey(Date.now());
-      const allPomodoros = await db.pomodoros.listForRange(dayKey(Date.now() - 365 * 86_400_000), todayKey);
+      const allPomodoros = await db.pomodoros.listForRange(dayKey(Date.now() - STREAK_LOOKBACK_MS), todayKey);
       const workPomodoros = filterCompletedWork(allPomodoros);
 
       const dayCounts = new Map<string, number>();
@@ -253,9 +239,9 @@ export function createStatsService(db: DB): StatsService {
       const weekKeys = rangeKeys(7);
       const priorWeekFrom = offsetDayKey(weekKeys[0], -7);
       const priorWeekTo = offsetDayKey(weekKeys[0], -1);
-      const prior30dFrom = dayKey(Date.now() - 30 * 24 * 60 * 60 * 1000);
+      const prior30dFrom = dayKey(Date.now() - PRIOR_30D_MS);
       const prior30dTo = dayKey(Date.now() - 24 * 60 * 60 * 1000);
-      const streakFrom = dayKey(Date.now() - 365 * 86_400_000);
+      const streakFrom = dayKey(Date.now() - STREAK_LOOKBACK_MS);
 
       const [rangeAll, todayAll, prior30dAll, currentWeekAll, priorWeekAll, streakAll, projects] =
         await Promise.all([
@@ -297,7 +283,7 @@ export function createStatsService(db: DB): StatsService {
       const rangeResult = computeRangeStats(pomCounts, distCounts, keys, days);
       const byProjectResult = computeProjectBreakdown(projectCounts, projects, days);
 
-      return computeStatsSummary(todayResult, weekResult, streakResult, rangeResult, byProjectResult);
+      return { today: todayResult, week: weekResult, streak: streakResult, range: rangeResult, byProject: byProjectResult };
     },
   };
 }
