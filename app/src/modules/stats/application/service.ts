@@ -221,7 +221,7 @@ export function createStatsService(db: DB): StatsService {
 
     async streak() {
       const todayKey = dayKey(Date.now());
-      const allPomodoros = await db.pomodoros.listForRange('2000-01-01', todayKey);
+      const allPomodoros = await db.pomodoros.listForRange(dayKey(Date.now() - 365 * 86_400_000), todayKey);
       const workPomodoros = filterCompletedWork(allPomodoros);
 
       const dayCounts = new Map<string, number>();
@@ -248,12 +248,28 @@ export function createStatsService(db: DB): StatsService {
     },
 
     async summary(days) {
-      const [todayResult, weekResult, streakResult, rangeResult, byProjectResult] = await Promise.all([
+      const keys = rangeKeys(days);
+      const all = await db.pomodoros.listForRange(keys[0], keys[keys.length - 1]);
+      const workPomodoros = filterCompletedWork(all);
+
+      const pomCounts = new Map<string, number>();
+      const distCounts = new Map<string, number>();
+      const projectCounts = new Map<string, number>();
+      for (const p of workPomodoros) {
+        pomCounts.set(p.dayKey, (pomCounts.get(p.dayKey) ?? 0) + 1);
+        distCounts.set(p.dayKey, (distCounts.get(p.dayKey) ?? 0) + p.distractionCount);
+        projectCounts.set(p.projectId, (projectCounts.get(p.projectId) ?? 0) + 1);
+      }
+
+      const rangeResult = computeRangeStats(pomCounts, distCounts, keys, days);
+
+      const projects = await db.projects.list();
+      const byProjectResult = computeProjectBreakdown(projectCounts, projects, days);
+
+      const [todayResult, weekResult, streakResult] = await Promise.all([
         this.today(),
         this.week(),
         this.streak(),
-        this.range(days),
-        this.byProject(days),
       ]);
 
       return computeStatsSummary(todayResult, weekResult, streakResult, rangeResult, byProjectResult);

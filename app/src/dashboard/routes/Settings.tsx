@@ -27,7 +27,9 @@ export function SettingsView() {
     try {
       const data = await sendMessage<Settings>('settings:get');
       setSettings(data);
-    } catch {}
+    } catch (e) {
+      console.error('[FocusFox]', e);
+    }
   }, []);
 
   useEffect(() => {
@@ -35,7 +37,7 @@ export function SettingsView() {
     let cancelled = false;
     sendMessage<FooterMeta>('meta:getFooter')
       .then((m) => { if (!cancelled) setFooterMeta(m); })
-      .catch(() => {});
+      .catch((e) => { console.error('[FocusFox]', e); });
     return () => {
       cancelled = true;
       if (debounceRef.current) clearTimeout(debounceRef.current);
@@ -49,7 +51,20 @@ export function SettingsView() {
     setSaved(false);
     try {
       setSettings((prev) => prev ? { ...prev, ...patch } : prev);
-    } catch {}
+    } catch (e) {
+      console.error('[FocusFox]', e);
+    }
+  }
+
+  async function doSave(patch: Partial<Omit<Settings, 'id'>>) {
+    try {
+      await sendMessage('settings:update', patch);
+      setSaved(true);
+      savedTimerRef.current = setTimeout(() => setSaved(false), 1500);
+    } catch (e) {
+      console.error('[FocusFox]', e);
+      setSaved(false);
+    }
   }
 
   function debouncedUpdate(patch: Partial<Omit<Settings, 'id'>>) {
@@ -58,16 +73,6 @@ export function SettingsView() {
     debounceRef.current = setTimeout(() => {
       doSave(patch);
     }, 300);
-  }
-
-  async function doSave(patch: Partial<Omit<Settings, 'id'>>) {
-    try {
-      await sendMessage('settings:update', patch);
-      setSaved(true);
-      savedTimerRef.current = setTimeout(() => setSaved(false), 1500);
-    } catch {
-      setSaved(false);
-    }
   }
 
   async function updateNow(patch: Partial<Omit<Settings, 'id'>>) {
@@ -112,11 +117,13 @@ export function SettingsView() {
         <div className="settings-toggles">
           <ToggleField
             label="Iniciar descanso automáticamente"
+            description="Al terminar un pomodoro, el descanso comienza automáticamente"
             value={settings.autoStartBreaks}
             onChange={(v) => updateNow({ autoStartBreaks: v })}
           />
           <ToggleField
             label="Iniciar siguiente pomodoro automáticamente"
+            description="Al terminar un descanso, el siguiente pomodoro comienza automáticamente"
             value={settings.autoStartNextWork}
             onChange={(v) => updateNow({ autoStartNextWork: v })}
           />

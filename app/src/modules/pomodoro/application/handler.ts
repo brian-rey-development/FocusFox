@@ -1,3 +1,5 @@
+import { z } from 'zod';
+import { parsePayload } from '@/shared/message';
 import type { PomodoroEngine } from '@/background/engine';
 import type { PomodoroService } from './service';
 import type { HandlerFn } from '@/shared/message';
@@ -8,7 +10,7 @@ export function createPomodoroHandlers(
 ): Record<string, HandlerFn> {
   return {
     'pomodoro:start': (payload) => {
-      const { taskId } = payload as { taskId: string };
+      const { taskId } = parsePayload(payload, z.object({ taskId: z.string() }));
       return engine.start(taskId);
     },
     'pomodoro:cancel': () => engine.cancel(),

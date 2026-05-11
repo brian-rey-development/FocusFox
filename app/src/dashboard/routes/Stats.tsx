@@ -8,18 +8,19 @@ import { RangeSelector } from '../components/RangeSelector';
 export function StatsView() {
   const [range, setRange] = useState<RangeDays>(7);
   const [summary, setSummary] = useState<StatsSummary | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [initialLoad, setInitialLoad] = useState(true);
   const pushToast = useDashStore((s) => s.pushToast);
 
   const fetchSummary = useCallback(async () => {
-    setLoading(true);
+    setInitialLoad(true);
     try {
       const data = await sendMessage<StatsSummary>('stats:summary', { days: range });
       setSummary(data);
-    } catch {
+    } catch (e) {
+      console.error('[FocusFox]', e);
       pushToast({ message: 'No se pudieron cargar las estadísticas', kind: 'error' });
     }
-    setLoading(false);
+    setInitialLoad(false);
   }, [range, pushToast]);
 
   useEffect(() => {
@@ -33,7 +34,7 @@ export function StatsView() {
       <div className="stats-view__header">
         <RangeSelector value={range} onChange={setRange} />
       </div>
-      {loading ? (
+      {initialLoad ? (
         <div className="dashboard-empty"><p>Cargando estadísticas...</p></div>
       ) : !hasData ? (
         <div className="dashboard-empty"><p>Cuando completes tu primer pomodoro, vas a verlo acá.</p></div>

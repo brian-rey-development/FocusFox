@@ -314,7 +314,7 @@ describe('App', () => {
 
     await waitFor(() => {
       expect(screen.getByText('¿Seguro? Vas a perder este pomodoro.')).toBeInTheDocument();
-      expect(screen.getByText('Sí, cancelar')).toBeInTheDocument();
+      expect(screen.getByText('Sí, cancelar pomodoro y desbloquear')).toBeInTheDocument();
       expect(screen.getByText('Volver')).toBeInTheDocument();
     });
   });
@@ -341,10 +341,10 @@ describe('App', () => {
     fireEvent.click(screen.getByText(/cancelar pomodoro/));
 
     await waitFor(() => {
-      expect(screen.getByText('Sí, cancelar')).toBeInTheDocument();
+      expect(screen.getByText('Sí, cancelar pomodoro y desbloquear')).toBeInTheDocument();
     });
 
-    fireEvent.click(screen.getByText('Sí, cancelar'));
+    fireEvent.click(screen.getByText('Sí, cancelar pomodoro y desbloquear'));
 
     await waitFor(() => {
       expect(mockRuntime.sendMessage).toHaveBeenCalledWith({ type: 'pomodoro:cancel' });

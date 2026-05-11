@@ -13,13 +13,18 @@ export interface TaskService {
   incrementCompletedPomodoros(taskId: string): Promise<void>;
 }
 
+interface TaskServiceDeps {
+  db: DB;
+  getActivePomodoroTaskId: () => Promise<string | null>;
+}
+
 const ALLOWED_TRANSITIONS: Record<TaskStatus, readonly TaskStatus[]> = {
   todo: ['doing'],
   doing: ['done'],
   done: ['todo'],
 };
 
-export function createTaskService(db: DB): TaskService {
+export function createTaskService({ db, getActivePomodoroTaskId }: TaskServiceDeps): TaskService {
   return {
     async list(projectId) {
       return db.tasks.list(projectId);
@@ -59,6 +64,10 @@ export function createTaskService(db: DB): TaskService {
     },
 
     async delete(id) {
+      const activeTaskId = await getActivePomodoroTaskId();
+      if (activeTaskId === id) {
+        throw new ValidationError('Cannot delete a task with an active pomodoro');
+      }
       await db.tasks.delete(id);
     },
 

@@ -27,7 +27,8 @@ export const TasksView = forwardRef<{ focusInput: () => void }, TasksViewProps>(
     try {
       const data = await sendMessage<Task[]>('task:list', { projectId: project.id });
       setTasks(data);
-    } catch {
+    } catch (e) {
+      console.error('[FocusFox]', e);
       pushToast({ message: 'No se pudieron cargar las tareas', kind: 'error' });
     }
   }, [project, pushToast]);
@@ -52,7 +53,8 @@ export const TasksView = forwardRef<{ focusInput: () => void }, TasksViewProps>(
     try {
       const created = await sendMessage<Task>('task:create', { projectId: project!.id, title });
       setTasks((prev) => [...prev, created]);
-    } catch {
+    } catch (e) {
+      console.error('[FocusFox]', e);
       pushToast({ message: 'No se pudo crear la tarea', kind: 'error' });
     }
   }
@@ -62,7 +64,8 @@ export const TasksView = forwardRef<{ focusInput: () => void }, TasksViewProps>(
       const newStatus = task.status === 'done' ? 'todo' : 'done';
       await sendMessage('task:setStatus', { id: task.id, status: newStatus });
       await fetchTasks();
-    } catch {
+    } catch (e) {
+      console.error('[FocusFox]', e);
       pushToast({ message: 'No se pudo actualizar la tarea', kind: 'error' });
     }
   }
@@ -71,7 +74,8 @@ export const TasksView = forwardRef<{ focusInput: () => void }, TasksViewProps>(
     try {
       await sendMessage('task:delete', { id: taskId });
       await fetchTasks();
-    } catch {
+    } catch (e) {
+      console.error('[FocusFox]', e);
       pushToast({ message: 'No se pudo eliminar la tarea', kind: 'error' });
     }
   }
@@ -80,7 +84,8 @@ export const TasksView = forwardRef<{ focusInput: () => void }, TasksViewProps>(
     try {
       await sendMessage('task:update', { id: taskId, patch: { title } });
       await fetchTasks();
-    } catch {
+    } catch (e) {
+      console.error('[FocusFox]', e);
       pushToast({ message: 'No se pudo renombrar la tarea', kind: 'error' });
     }
   }

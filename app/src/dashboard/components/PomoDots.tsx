@@ -11,7 +11,7 @@ export function PomoDots({ completed, estimated }: PomoDotsProps) {
   const max = Math.max(estimated, completed);
 
   return (
-    <span className="pomo-dots">
+    <span className="pomo-dots" aria-label={`${completed} de ${estimated} pomodoros completados`}>
       {Array.from({ length: max }, (_, i) => (
         <span
           key={i}

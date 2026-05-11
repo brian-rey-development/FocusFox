@@ -11,12 +11,18 @@ interface TaskSelectorProps {
 export function TaskSelector({ projects, tasks, selectedTaskId, onSelectTask }: TaskSelectorProps) {
   const nonArchived = projects.filter((p) => !p.archived);
 
+  const handleOpenDashboard = () => {
+    void browser.tabs.create({ url: browser.runtime.getURL('src/dashboard/index.html') });
+  };
+
   if (nonArchived.length === 0) {
     return (
       <div className="popup-task-selector">
         <span className="popup-label">Tarea</span>
         <p className="popup-task-selector__empty">
-          <a href="#">Creá un proyecto desde el panel</a>
+          <button className="popup-task-selector__link-btn" onClick={handleOpenDashboard}>
+            Creá un proyecto desde el panel
+          </button>
         </p>
       </div>
     );
@@ -29,7 +35,9 @@ export function TaskSelector({ projects, tasks, selectedTaskId, onSelectTask }: 
       <div className="popup-task-selector">
         <span className="popup-label">Tarea</span>
         <p className="popup-task-selector__empty">
-          <a href="#">+ nueva tarea</a>
+          <button className="popup-task-selector__link-btn" onClick={handleOpenDashboard}>
+            + nueva tarea
+          </button>
         </p>
       </div>
     );

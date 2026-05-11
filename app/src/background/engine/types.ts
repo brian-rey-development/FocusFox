@@ -1,4 +1,9 @@
 import type { EnginePhase, TickTaskInfo, Tick } from '@/shared/engine-types';
+import type { PomodoroService } from '@/modules/pomodoro/application/service';
+import type { TaskService } from '@/modules/task/application/service';
+import type { NoteService } from '@/modules/note/application/service';
+import type { SettingsService } from '@/modules/settings/application/service';
+import type { DB } from '@/shared/database/types';
 
 export type { EnginePhase, TickTaskInfo, Tick };
 
@@ -30,4 +35,15 @@ export interface FastStorage {
 
 export interface EventEmitter {
   broadcast(event: PomodoroEvent): void;
+}
+
+export interface Deps {
+  db: DB;
+  pomodoroSvc: PomodoroService;
+  taskSvc: TaskService;
+  noteSvc: NoteService;
+  settingsSvc: SettingsService;
+  alarmManager: AlarmManager;
+  fastStorage: FastStorage;
+  eventEmitter: EventEmitter;
 }

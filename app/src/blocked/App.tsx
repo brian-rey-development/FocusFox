@@ -117,17 +117,7 @@ export function App() {
     }
   }
 
-  const stageProps = snapshot ? {
-    task: snapshot.task ?? { id: '', title: '' },
-    project: {
-      name: snapshot.task?.projectName ?? '',
-      color: snapshot.task?.projectColor ?? 'orange',
-    },
-    cycleIndex: snapshot.cycleIndex,
-    longBreakEvery: snapshot.longBreakEvery,
-  } : null;
-
-  if (error === 'unreachable' && !mounted) {
+  if (error === 'unreachable') {
     return <ErrorToast onRetry={() => { setError(null); mount(); }} />;
   }
 
@@ -141,11 +131,14 @@ export function App() {
     <Stage>
       <BlockedHeader />
       <TaskTimeCard
-        task={stageProps!.task}
-        project={stageProps!.project}
+        task={snapshot.task ?? { id: '', title: '' }}
+        project={{
+          name: snapshot.task?.projectName ?? '',
+          color: snapshot.task?.projectColor ?? 'orange',
+        }}
         remainingMs={remainingMs}
-        cycleIndex={stageProps!.cycleIndex}
-        longBreakEvery={stageProps!.longBreakEvery}
+        cycleIndex={snapshot.cycleIndex}
+        longBreakEvery={snapshot.longBreakEvery}
       />
       <TodayMiniStats today={todayValue} streakDays={streakDays} />
       <CancelLink onCancel={handleCancel} />

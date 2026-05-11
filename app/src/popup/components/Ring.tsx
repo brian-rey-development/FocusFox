@@ -65,7 +65,7 @@ export function Ring({ remainingMs, totalMs, label }: RingProps) {
           strokeLinecap="round"
           transform={`rotate(-90 ${CENTER} ${CENTER})`}
           filter="url(#ring-glow)"
-          style={{ transition: 'stroke-dashoffset 0.3s linear' }}
+          className="ring__progress"
         />
         <text
           x={CENTER}

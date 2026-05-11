@@ -27,17 +27,19 @@ export function TaskMenu({ onRename, onDelete }: TaskMenuProps) {
         className="task-menu__trigger"
         onClick={() => setOpen((v) => !v)}
         aria-label="Acciones de tarea"
+        aria-expanded={open}
       >
         <MoreHorizontal size={16} aria-hidden="true" />
       </button>
       {open && (
-        <div className="task-menu__dropdown">
-          <button className="task-menu__item" onClick={() => { onRename(); setOpen(false); }}>
+        <div className="task-menu__dropdown" role="menu" onKeyDown={(e) => { if (e.key === 'Escape') setOpen(false); }}>
+          <button className="task-menu__item" role="menuitem" onClick={() => { onRename(); setOpen(false); }}>
             <Pencil size={14} aria-hidden="true" />
             Renombrar
           </button>
           <button
             className="task-menu__item task-menu__item--danger"
+            role="menuitem"
             onClick={() => { onDelete(); setOpen(false); }}
           >
             <Trash2 size={14} aria-hidden="true" />

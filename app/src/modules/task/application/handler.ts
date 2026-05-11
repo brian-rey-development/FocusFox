@@ -1,3 +1,5 @@
+import { z } from 'zod';
+import { parsePayload } from '@/shared/message';
 import type { TaskService } from './service';
 import type { HandlerFn } from '@/shared/message';
 
@@ -5,17 +7,17 @@ export function createTaskHandlers(
   svc: TaskService,
 ): Record<string, HandlerFn> {
   return {
-    'task:list': (payload) => svc.list((payload as { projectId: string }).projectId),
-    'task:listAll': (payload) => svc.listAll((payload as { projectIds: string[] }).projectIds),
+    'task:list': (payload) => svc.list(parsePayload(payload, z.object({ projectId: z.string() })).projectId),
+    'task:listAll': (payload) => svc.listAll(parsePayload(payload, z.object({ projectIds: z.array(z.string()) })).projectIds),
     'task:create': (payload) => svc.create(payload),
     'task:update': (payload) => {
-      const { id, patch } = payload as { id: string; patch: unknown };
+      const { id, patch } = parsePayload(payload, z.object({ id: z.string(), patch: z.unknown() }));
       return svc.update(id, patch);
     },
     'task:setStatus': (payload) => {
-      const { id, status } = payload as { id: string; status: unknown };
+      const { id, status } = parsePayload(payload, z.object({ id: z.string(), status: z.unknown() }));
       return svc.setStatus(id, status);
     },
-    'task:delete': (payload) => svc.delete((payload as { id: string }).id),
+    'task:delete': (payload) => svc.delete(parsePayload(payload, z.object({ id: z.string() })).id),
   };
 }

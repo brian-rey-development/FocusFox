@@ -45,7 +45,7 @@ export function shouldBlock(
 }
 
 export function registerBlocker(
-  engine: { currentPhase(): EnginePhase; currentPomodoroId(): string | null },
+  engine: { currentPhase(): EnginePhase; currentPomodoroId(): string | null; recordDistraction(pomodoroId: string): Promise<void> },
   distractionSvc: DistractionService,
 ): void {
   const blockedPageBase = browser.runtime.getURL('src/blocked/index.html');
@@ -66,7 +66,7 @@ export function registerBlocker(
         type: 'auto_blocked_attempt' as const,
         url: details.url,
         domain,
-      }).catch(() => {});
+      }).catch((e) => { console.error('[FocusFox]', e); });
 
       return {
         redirectUrl: buildBlockedUrl(details.url, domain, blockedPageBase),

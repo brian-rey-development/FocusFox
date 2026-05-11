@@ -24,8 +24,6 @@ export interface PopupState {
   tasks: Task[];
   selectedTaskId: string | null;
   estimateDraft: number;
-  showManualInput: boolean;
-  showCancelConfirm: boolean;
   error: string | null;
   active: ActivePomodoro | null;
 }
@@ -36,8 +34,6 @@ interface PopupActions {
   applyEvent: (event: { type: string }) => void;
   selectTask: (taskId: string) => void;
   setEstimateDraft: (n: number) => void;
-  setShowManualInput: (v: boolean) => void;
-  setShowCancelConfirm: (v: boolean) => void;
   startPomodoro: () => Promise<void>;
   cancelPomodoro: () => Promise<void>;
   skipBreak: () => Promise<void>;
@@ -71,8 +67,6 @@ export const usePopupStore = create<PopupState & PopupActions>((set, get) => ({
   tasks: [],
   selectedTaskId: null,
   estimateDraft: 1,
-  showManualInput: false,
-  showCancelConfirm: false,
   error: null,
   active: null,
 
@@ -91,8 +85,6 @@ export const usePopupStore = create<PopupState & PopupActions>((set, get) => ({
         phase: phaseFromEngine(tickData.phase),
         selectedTaskId: null,
         estimateDraft: 1,
-        showManualInput: false,
-        showCancelConfirm: false,
         error: null,
         active: buildActive(tickData),
       });
@@ -110,7 +102,8 @@ export const usePopupStore = create<PopupState & PopupActions>((set, get) => ({
           estimateDraft: firstTask?.estimatedPomodoros ?? 1,
         });
       }
-    } catch {
+    } catch (e) {
+      console.error('[FocusFox]', e);
       set({ phase: 'error', error: 'No se pudo inicializar' });
     }
   },
@@ -131,7 +124,10 @@ export const usePopupStore = create<PopupState & PopupActions>((set, get) => ({
           sendMessage<Task[]>('task:list', { projectId: active.projectId }).then((tasks) => {
             const activeTasks = Array.isArray(tasks) ? tasks.filter((task) => task.status !== 'done') : [];
             set({ tasks: activeTasks });
-          }).catch(() => {});
+          }).catch((e) => {
+            console.error('[FocusFox]', e);
+            set({ phase: 'error', error: 'No se pudieron cargar las tareas' });
+          });
         }
       }
     } else {
@@ -160,14 +156,6 @@ export const usePopupStore = create<PopupState & PopupActions>((set, get) => ({
     set({ estimateDraft: Math.max(1, Math.min(20, n)) });
   },
 
-  setShowManualInput(v) {
-    set({ showManualInput: v });
-  },
-
-  setShowCancelConfirm(v) {
-    set({ showCancelConfirm: v });
-  },
-
   async startPomodoro() {
     const { selectedTaskId, estimateDraft } = get();
     if (!selectedTaskId) return;
@@ -177,21 +165,22 @@ export const usePopupStore = create<PopupState & PopupActions>((set, get) => ({
 
     try {
       if (task.estimatedPomodoros !== estimateDraft) {
-        sendMessage('task:update', { id: selectedTaskId, patch: { estimatedPomodoros: estimateDraft } }).catch(() => {});
+        sendMessage('task:update', { id: selectedTaskId, patch: { estimatedPomodoros: estimateDraft } }).catch((e) => { console.error('[FocusFox]', e); });
       }
 
       await sendMessage('pomodoro:start', { taskId: selectedTaskId });
-    } catch {
-      set({ error: 'No se pudo iniciar el pomodoro' });
+    } catch (e) {
+      console.error('[FocusFox]', e);
+      set({ phase: 'error', error: 'No se pudo iniciar el pomodoro' });
     }
   },
 
   async cancelPomodoro() {
     try {
       await sendMessage('pomodoro:cancel');
-      set({ showCancelConfirm: false, showManualInput: false });
-    } catch {
-      set({ error: 'No se pudo cancelar el pomodoro' });
+    } catch (e) {
+      console.error('[FocusFox]', e);
+      set({ phase: 'error', error: 'No se pudo cancelar el pomodoro' });
     }
   },
 
@@ -199,8 +188,9 @@ export const usePopupStore = create<PopupState & PopupActions>((set, get) => ({
     try {
       await sendMessage('pomodoro:skipBreak');
       set({ active: null, phase: 'idle' });
-    } catch {
-      set({ error: 'No se pudo saltar el descanso' });
+    } catch (e) {
+      console.error('[FocusFox]', e);
+      set({ phase: 'error', error: 'No se pudo saltar el descanso' });
     }
   },
 
@@ -214,9 +204,9 @@ export const usePopupStore = create<PopupState & PopupActions>((set, get) => ({
         type: 'manual',
         reason: reason || undefined,
       });
-      set({ showManualInput: false });
-    } catch {
-      set({ error: 'No se pudo registrar la distracción' });
+    } catch (e) {
+      console.error('[FocusFox]', e);
+      set({ phase: 'error', error: 'No se pudo registrar la distracción' });
     }
   },
 

@@ -18,7 +18,7 @@ const CHIP_CLASSES: Record<Phase, string> = {
   idle: 'popup-header__chip--idle',
   active: 'popup-header__chip--active',
   break: 'popup-header__chip--break',
-  error: 'popup-header__chip--active',
+  error: 'popup-header__chip--error',
 };
 
 export function Header({ phase }: HeaderProps) {

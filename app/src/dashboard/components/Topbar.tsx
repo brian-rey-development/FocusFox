@@ -10,7 +10,7 @@ interface TopbarProps {
 const TABS: Array<{ id: Tab; label: string }> = [
   { id: 'hoy', label: 'Hoy' },
   { id: 'tareas', label: 'Tareas' },
-  { id: 'stats', label: 'Stats' },
+  { id: 'stats', label: 'Estadísticas' },
 ];
 
 export function Topbar({ tab, onTabChange, rightAction }: TopbarProps) {

@@ -20,7 +20,8 @@ export const TodayView = forwardRef<{ focusInput: () => void }>(function TodayVi
     try {
       const data = await sendMessage<NoteEntry[]>('notes:listDay', { day: today });
       setNotes(data);
-    } catch {
+    } catch (e) {
+      console.error('[FocusFox]', e);
       pushToast({ message: 'No se pudieron cargar las notas', kind: 'error' });
     }
   }, [today, pushToast]);
@@ -33,7 +34,8 @@ export const TodayView = forwardRef<{ focusInput: () => void }>(function TodayVi
     try {
       const note = await sendMessage<NoteEntry>('note:add', { day: today, kind: 'user', text });
       setNotes((prev) => [note, ...prev]);
-    } catch {
+    } catch (e) {
+      console.error('[FocusFox]', e);
       pushToast({ message: 'No se pudo guardar la nota', kind: 'error' });
     }
   }

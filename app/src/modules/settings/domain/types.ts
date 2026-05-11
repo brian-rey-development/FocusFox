@@ -2,10 +2,10 @@ import { z } from 'zod';
 
 export const SettingsSchema = z.object({
   id: z.literal('default'),
-  workMs: z.number().int().positive(),
-  shortBreakMs: z.number().int().positive(),
-  longBreakMs: z.number().int().positive(),
-  longBreakEvery: z.number().int().positive(),
+  workMs: z.number().int().positive().max(14_400_000),
+  shortBreakMs: z.number().int().positive().max(3_600_000),
+  longBreakMs: z.number().int().positive().max(3_600_000),
+  longBreakEvery: z.number().int().positive().max(10),
   autoStartBreaks: z.boolean(),
   autoStartNextWork: z.boolean(),
   allowlist: z.array(z.string()),

@@ -7,17 +7,23 @@ interface NewTaskInputProps {
 
 export const NewTaskInput = forwardRef<HTMLInputElement, NewTaskInputProps>(function NewTaskInput({ onSubmit }, ref) {
   const [value, setValue] = useState('');
+  const [saving, setSaving] = useState(false);
 
-  function handleSubmit() {
+  async function handleSubmit() {
     const trimmed = value.trim();
-    if (!trimmed) return;
-    onSubmit(trimmed);
-    setValue('');
+    if (!trimmed || saving) return;
+    setSaving(true);
+    try {
+      await onSubmit(trimmed);
+      setValue('');
+    } finally {
+      setSaving(false);
+    }
   }
 
   return (
     <div className="new-task-input">
-      <button className="new-task-input__icon" onClick={handleSubmit} aria-label="Crear tarea">
+      <button className="new-task-input__icon" onClick={handleSubmit} aria-label="Crear tarea" disabled={saving}>
         <Plus size={16} aria-hidden="true" />
       </button>
       <input
@@ -30,6 +36,7 @@ export const NewTaskInput = forwardRef<HTMLInputElement, NewTaskInputProps>(func
         onKeyDown={(e) => {
           if (e.key === 'Enter') handleSubmit();
         }}
+        disabled={saving}
       />
     </div>
   );

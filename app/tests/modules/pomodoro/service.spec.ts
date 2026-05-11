@@ -7,7 +7,7 @@ import { dayKey } from '@/shared/time';
 
 async function setup() {
   const db = await createFreshDB();
-  const taskSvc = createTaskService(db);
+  const taskSvc = createTaskService({ db, getActivePomodoroTaskId: async () => null });
   const task = await taskSvc.create({ projectId: 'proj-1', title: 'Test task' });
   const pomoSvc = createPomodoroService(db, taskSvc);
   return { db, taskSvc, pomoSvc, task };

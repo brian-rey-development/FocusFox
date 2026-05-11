@@ -94,8 +94,6 @@ describe('PopupStore', () => {
       tasks: [],
       selectedTaskId: null,
       estimateDraft: 1,
-      showManualInput: false,
-      showCancelConfirm: false,
       error: null,
       active: null,
     });
@@ -195,21 +193,6 @@ describe('PopupStore', () => {
     });
   });
 
-  describe('setShowManualInput / setShowCancelConfirm', () => {
-    it('toggles showManualInput', () => {
-      usePopupStore.getState().setShowManualInput(true);
-      expect(usePopupStore.getState().showManualInput).toBe(true);
-
-      usePopupStore.getState().setShowManualInput(false);
-      expect(usePopupStore.getState().showManualInput).toBe(false);
-    });
-
-    it('toggles showCancelConfirm', () => {
-      usePopupStore.getState().setShowCancelConfirm(true);
-      expect(usePopupStore.getState().showCancelConfirm).toBe(true);
-    });
-  });
-
   describe('startPomodoro', () => {
     it('sends pomodoro:start message and does not throw when no task selected', async () => {
       usePopupStore.setState({ selectedTaskId: null });
@@ -262,16 +245,11 @@ describe('PopupStore', () => {
       usePopupStore.setState({
         phase: 'active',
         active: makeActivePomodoro(),
-        showCancelConfirm: true,
-        showManualInput: true,
       });
 
       await usePopupStore.getState().cancelPomodoro();
 
       expect(mock.sendMessage).toHaveBeenCalledWith({ type: 'pomodoro:cancel' });
-      const state = usePopupStore.getState();
-      expect(state.showCancelConfirm).toBe(false);
-      expect(state.showManualInput).toBe(false);
     });
   });
 
@@ -310,7 +288,6 @@ describe('PopupStore', () => {
           reason: 'got distracted',
         },
       });
-      expect(usePopupStore.getState().showManualInput).toBe(false);
     });
 
     it('sends distraction:record without reason when none given', async () => {

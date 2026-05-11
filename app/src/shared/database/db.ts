@@ -35,6 +35,11 @@ export async function openDB(): Promise<DB> {
         await tx.objectStore(store).clear();
       }
       await tx.done;
+      try {
+        await browser.storage.local.remove('engineState');
+      } catch {
+        // browser API not available (e.g. test environment)
+      }
       await db.put('settings', { id: 'default', ...DEFAULT_SETTINGS });
     },
     projects: createProjectRepo(db),

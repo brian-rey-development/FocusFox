@@ -13,7 +13,7 @@ export function createDataService(db: DB): DataService {
 
   return {
     async export(): Promise<ExportPayload> {
-      const [projects, tasks, pomodoros, distractions, notes, settings] =
+      const [projects, tasks, pomodoros, distractions, notes, settings, metaRows] =
         await Promise.all([
           raw.getAll('projects'),
           raw.getAll('tasks'),
@@ -21,6 +21,7 @@ export function createDataService(db: DB): DataService {
           raw.getAll('distractions'),
           raw.getAll('notes'),
           raw.get('settings', 'default'),
+          raw.getAll('meta'),
         ]);
 
       return {
@@ -42,6 +43,7 @@ export function createDataService(db: DB): DataService {
             autoStartNextWork: false,
             allowlist: [],
           },
+          meta: metaRows,
         },
       };
     },
@@ -49,7 +51,7 @@ export function createDataService(db: DB): DataService {
     async import(payload: unknown): Promise<void> {
       const parsed = ExportV1Schema.parse(payload);
 
-      const stores = ['projects', 'tasks', 'pomodoros', 'distractions', 'notes', 'settings'] as const;
+      const stores = ['projects', 'tasks', 'pomodoros', 'distractions', 'notes', 'settings', 'meta'] as const;
       const tx = raw.transaction(stores, 'readwrite');
 
       for (const store of stores) {
@@ -73,6 +75,10 @@ export function createDataService(db: DB): DataService {
       }
 
       await tx.objectStore('settings').put(parsed.data.settings);
+
+      for (const entry of parsed.data.meta) {
+        await tx.objectStore('meta').put(entry);
+      }
 
       await tx.done;
     },

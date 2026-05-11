@@ -6,7 +6,7 @@ import { TaskSchema } from '@/modules/task/domain/types';
 describe('TaskService', () => {
   it('creates a task with defaults', async () => {
     const db = await createFreshDB();
-    const svc = createTaskService(db);
+    const svc = createTaskService({ db, getActivePomodoroTaskId: async () => null });
 
     const task = await svc.create({ projectId: 'proj-1', title: 'Test task' });
 
@@ -17,7 +17,7 @@ describe('TaskService', () => {
 
   it('lists tasks for a project', async () => {
     const db = await createFreshDB();
-    const svc = createTaskService(db);
+    const svc = createTaskService({ db, getActivePomodoroTaskId: async () => null });
 
     await svc.create({ projectId: 'proj-1', title: 'Task 1' });
     await svc.create({ projectId: 'proj-1', title: 'Task 2' });
@@ -29,7 +29,7 @@ describe('TaskService', () => {
 
   it('updates a task', async () => {
     const db = await createFreshDB();
-    const svc = createTaskService(db);
+    const svc = createTaskService({ db, getActivePomodoroTaskId: async () => null });
 
     const task = await svc.create({ projectId: 'proj-1', title: 'Original' });
     const updated = await svc.update(task.id, { title: 'Updated' });
@@ -39,7 +39,7 @@ describe('TaskService', () => {
 
   it('rejects invalid update input', async () => {
     const db = await createFreshDB();
-    const svc = createTaskService(db);
+    const svc = createTaskService({ db, getActivePomodoroTaskId: async () => null });
 
     const task = await svc.create({ projectId: 'proj-1', title: 'Test' });
     await expect(svc.update(task.id, { title: '' })).rejects.toThrow();
@@ -47,7 +47,7 @@ describe('TaskService', () => {
 
   it('transitions todo to doing', async () => {
     const db = await createFreshDB();
-    const svc = createTaskService(db);
+    const svc = createTaskService({ db, getActivePomodoroTaskId: async () => null });
 
     const task = await svc.create({ projectId: 'proj-1', title: 'Test' });
     const updated = await svc.setStatus(task.id, 'doing');
@@ -57,7 +57,7 @@ describe('TaskService', () => {
 
   it('transitions doing to done', async () => {
     const db = await createFreshDB();
-    const svc = createTaskService(db);
+    const svc = createTaskService({ db, getActivePomodoroTaskId: async () => null });
 
     const task = await svc.create({ projectId: 'proj-1', title: 'Test' });
     await svc.setStatus(task.id, 'doing');
@@ -69,7 +69,7 @@ describe('TaskService', () => {
 
   it('reverts doing to todo', async () => {
     const db = await createFreshDB();
-    const svc = createTaskService(db);
+    const svc = createTaskService({ db, getActivePomodoroTaskId: async () => null });
 
     const task = await svc.create({ projectId: 'proj-1', title: 'Test' });
     await svc.setStatus(task.id, 'doing');
@@ -79,7 +79,7 @@ describe('TaskService', () => {
 
   it('allows reverting done to todo but rejects done to doing', async () => {
     const db = await createFreshDB();
-    const svc = createTaskService(db);
+    const svc = createTaskService({ db, getActivePomodoroTaskId: async () => null });
 
     const task = await svc.create({ projectId: 'proj-1', title: 'Test' });
     await svc.setStatus(task.id, 'doing');
@@ -96,7 +96,7 @@ describe('TaskService', () => {
 
   it('deletes a task', async () => {
     const db = await createFreshDB();
-    const svc = createTaskService(db);
+    const svc = createTaskService({ db, getActivePomodoroTaskId: async () => null });
 
     const task = await svc.create({ projectId: 'proj-1', title: 'Delete me' });
     await svc.delete(task.id);
@@ -107,7 +107,7 @@ describe('TaskService', () => {
 
   it('increments completed pomodoros', async () => {
     const db = await createFreshDB();
-    const svc = createTaskService(db);
+    const svc = createTaskService({ db, getActivePomodoroTaskId: async () => null });
 
     const task = await svc.create({ projectId: 'proj-1', title: 'Test' });
     await svc.incrementCompletedPomodoros(task.id);

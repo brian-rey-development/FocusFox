@@ -18,12 +18,12 @@ interface SidebarProps {
 const NAV_ITEMS: Array<{ tab: Tab; icon: React.ReactNode; label: string; shortcut: string }> = [
   { tab: 'hoy', icon: <Timer size={18} aria-hidden="true" />, label: 'Hoy', shortcut: '1' },
   { tab: 'tareas', icon: <ListTodo size={18} aria-hidden="true" />, label: 'Tareas', shortcut: '2' },
-  { tab: 'stats', icon: <BarChart3 size={18} aria-hidden="true" />, label: 'Stats', shortcut: '3' },
+  { tab: 'stats', icon: <BarChart3 size={18} aria-hidden="true" />, label: 'Estadísticas', shortcut: '3' },
 ];
 
 export function Sidebar({ tab, projects, selectedProjectId, tick, onNavigate, onSelectProject, onCreateProject }: SidebarProps) {
   return (
-    <aside className="sidebar">
+    <aside className="sidebar" aria-label="Barra lateral">
       <div className="sidebar__brand">
         <Timer size={20} aria-hidden="true" />
         <span>FocusFox</span>

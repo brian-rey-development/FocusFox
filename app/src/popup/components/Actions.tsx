@@ -1,6 +1,6 @@
 interface ActionsProps {
   kind: 'idle' | 'active';
-  onPrimary: () => void;
+  onPrimary?: () => void;
   onSecondary?: () => void;
   primaryDisabled?: boolean;
 }

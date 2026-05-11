@@ -95,6 +95,11 @@ input:focus-visible {
   color: var(--text-tertiary);
 }
 
+.popup-header__chip--error {
+  background: rgba(239, 68, 68, 0.15);
+  color: var(--color-red, #ef4444);
+}
+
 .popup-header__dashboard-btn {
   display: flex;
   align-items: center;
@@ -134,8 +139,24 @@ input:focus-visible {
   display: flex;
   align-items: center;
   justify-content: center;
+  gap: var(--space-2);
   color: var(--text-tertiary);
   font-size: var(--font-size-sm);
+}
+
+.popup-loading__spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid var(--border-color);
+  border-top-color: var(--color-primary);
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 /* Error view */
@@ -211,13 +232,19 @@ input:focus-visible {
   padding: var(--space-2) 0;
 }
 
-.popup-task-selector__empty a {
+.popup-task-selector__empty a,
+.popup-task-selector__link-btn {
   color: var(--color-primary);
   text-decoration: none;
   font-weight: var(--font-weight-medium);
+  font-family: inherit;
+  font-size: inherit;
+  padding: 0;
+  cursor: pointer;
 }
 
-.popup-task-selector__empty a:hover {
+.popup-task-selector__empty a:hover,
+.popup-task-selector__link-btn:hover {
   text-decoration: underline;
 }
 
@@ -336,6 +363,10 @@ input:focus-visible {
   font-size: var(--font-size-sm);
   color: var(--text-secondary);
   font-weight: var(--font-weight-medium);
+}
+
+.ring__progress {
+  transition: stroke-dashoffset 0.3s linear;
 }
 
 /* Task card */
@@ -573,7 +604,8 @@ input:focus-visible {
   .popup-actions__secondary,
   .popup-distraction__btn,
   .popup-error__btn,
-  .popup-toast {
+  .popup-toast,
+  .ring__progress {
     transition: none;
     animation: none;
   }

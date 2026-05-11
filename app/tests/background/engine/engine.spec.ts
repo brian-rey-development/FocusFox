@@ -46,7 +46,7 @@ function createMockEventEmitter(): EventEmitter & { events: PomodoroEvent[] } {
 
 async function setupEngine() {
   const db = await createFreshDB();
-  const taskSvc = createTaskService(db);
+  const taskSvc = createTaskService({ db, getActivePomodoroTaskId: async () => null });
   const noteSvc = createNoteService(db);
   const settingsSvc = createSettingsService(db);
   const projectSvc = createProjectService(db, taskSvc);
@@ -330,8 +330,8 @@ describe('PomodoroEngine', () => {
       const tick1 = await engine.getTick();
       expect(tick1.distractionCountSession).toBe(0);
 
-      engine.recordDistraction(tick1.pomodoroId!);
-      engine.recordDistraction(tick1.pomodoroId!);
+      await engine.recordDistraction(tick1.pomodoroId!);
+      await engine.recordDistraction(tick1.pomodoroId!);
 
       const tick2 = await engine.getTick();
       expect(tick2.distractionCountSession).toBe(2);
@@ -345,7 +345,7 @@ describe('PomodoroEngine', () => {
       const task = await taskSvc.create({ projectId: project.id, title: 'T' });
       await engine.start(task.id);
 
-      engine.recordDistraction('wrong-id');
+      await engine.recordDistraction('wrong-id');
 
       const tick = await engine.getTick();
       expect(tick.distractionCountSession).toBe(0);

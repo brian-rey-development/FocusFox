@@ -5,6 +5,7 @@ import { PomodoroSchema } from '@/modules/pomodoro/domain/types';
 import { DistractionSchema } from '@/modules/distraction/domain/types';
 import { NoteEntrySchema } from '@/modules/note/domain/types';
 import { SettingsSchema } from '@/modules/settings/domain/types';
+import { MetaRowSchema } from '@/modules/meta/domain/types';
 
 export const ExportV1Schema = z.object({
   formatVersion: z.literal(1),
@@ -16,6 +17,7 @@ export const ExportV1Schema = z.object({
     distractions: z.array(DistractionSchema),
     notes: z.array(NoteEntrySchema),
     settings: SettingsSchema,
+    meta: z.array(MetaRowSchema).default([]),
   }),
 });
 

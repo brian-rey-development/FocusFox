@@ -4,6 +4,7 @@ import type { Project } from '@/modules/project/domain/types';
 import type { Task } from '@/modules/task/domain/types';
 import type { NoteEntry } from '@/modules/note/domain/types';
 import type { Settings } from '@/modules/settings/domain/types';
+import type { StatsSummary } from '@/modules/stats/domain/types';
 import type { Tab } from './hooks/useHashRoute';
 
 export interface Toast {
@@ -19,7 +20,7 @@ export interface DashState {
   selectedProjectId: string | null;
   tasksByProject: Record<string, Task[]>;
   notesByDay: Record<string, NoteEntry[]>;
-  statsCache: unknown | null;
+  statsCache: StatsSummary | null;
   settings: Settings | null;
   toasts: Toast[];
 }
@@ -31,7 +32,7 @@ interface DashActions {
   setSelectedProject: (id: string | null) => void;
   setTasksForProject: (projectId: string, tasks: Task[]) => void;
   setNotesForDay: (day: string, notes: NoteEntry[]) => void;
-  setStatsCache: (summary: unknown) => void;
+  setStatsCache: (summary: StatsSummary | null) => void;
   setSettings: (settings: Settings) => void;
   pushToast: (toast: Omit<Toast, 'id'>) => void;
   removeToast: (id: string) => void;

@@ -7,7 +7,7 @@ import { createTaskService } from '@/modules/task/application/service';
 describe('ProjectService', () => {
   it('creates a project', async () => {
     const db = await createFreshDB();
-    const svc = createProjectService(db, createTaskService(db));
+    const svc = createProjectService(db, createTaskService({ db, getActivePomodoroTaskId: async () => null }));
 
     const project = await svc.create({ name: 'My Project', color: 'blue' });
 
@@ -17,7 +17,7 @@ describe('ProjectService', () => {
 
   it('lists active projects by default', async () => {
     const db = await createFreshDB();
-    const svc = createProjectService(db, createTaskService(db));
+    const svc = createProjectService(db, createTaskService({ db, getActivePomodoroTaskId: async () => null }));
 
     await svc.create({ name: 'Active', color: 'green' });
     const archived = await svc.create({ name: 'Archived', color: 'red' });
@@ -30,7 +30,7 @@ describe('ProjectService', () => {
 
   it('updates a project', async () => {
     const db = await createFreshDB();
-    const svc = createProjectService(db, createTaskService(db));
+    const svc = createProjectService(db, createTaskService({ db, getActivePomodoroTaskId: async () => null }));
 
     const project = await svc.create({ name: 'Original', color: 'blue' });
     const updated = await svc.update(project.id, { name: 'Updated' });
@@ -40,7 +40,7 @@ describe('ProjectService', () => {
 
   it('archives a project', async () => {
     const db = await createFreshDB();
-    const svc = createProjectService(db, createTaskService(db));
+    const svc = createProjectService(db, createTaskService({ db, getActivePomodoroTaskId: async () => null }));
 
     const project = await svc.create({ name: 'Test', color: 'blue' });
     await svc.archive(project.id);
@@ -51,7 +51,7 @@ describe('ProjectService', () => {
 
   it('unarchives a project', async () => {
     const db = await createFreshDB();
-    const svc = createProjectService(db, createTaskService(db));
+    const svc = createProjectService(db, createTaskService({ db, getActivePomodoroTaskId: async () => null }));
 
     const project = await svc.create({ name: 'Test', color: 'blue' });
     await svc.archive(project.id);
@@ -63,14 +63,14 @@ describe('ProjectService', () => {
 
   it('rejects invalid create input', async () => {
     const db = await createFreshDB();
-    const svc = createProjectService(db, createTaskService(db));
+    const svc = createProjectService(db, createTaskService({ db, getActivePomodoroTaskId: async () => null }));
 
     await expect(svc.create({ name: '', color: 'blue' })).rejects.toThrow();
   });
 
   it('rejects archive with active tasks', async () => {
     const db = await createFreshDB();
-    const taskSvc = createTaskService(db);
+    const taskSvc = createTaskService({ db, getActivePomodoroTaskId: async () => null });
     const svc = createProjectService(db, taskSvc);
 
     const project = await svc.create({ name: 'Busy', color: 'blue' });

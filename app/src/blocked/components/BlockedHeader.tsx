@@ -8,7 +8,7 @@ export function BlockedHeader() {
       </div>
       <h1 className="blocked-header__title">Estás en foco.</h1>
       <p className="blocked-header__subtitle">
-        Este sitio no está en tu allowlist. Volvé a tu tarea o cancelá el pomodoro si es una emergencia.
+        Este sitio está bloqueado durante tu sesión de foco
       </p>
     </div>
   );

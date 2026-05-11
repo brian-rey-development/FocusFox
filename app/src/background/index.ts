@@ -116,7 +116,14 @@ function setupServices(db: DB) {
   const metaSvc = createMetaService(db);
   const noteSvc = createNoteService(db);
   const distractionSvc = createDistractionService(db);
-  const taskSvc = createTaskService(db);
+  const taskSvc = createTaskService({
+    db,
+    getActivePomodoroTaskId: async () => {
+      if (!engine) return null;
+      const tick = await engine.getTick();
+      return tick.task?.id ?? null;
+    },
+  });
   const projectSvc = createProjectService(db, taskSvc);
   const pomodoroSvc = createPomodoroService(db, taskSvc);
   const statsSvc = createStatsService(db);
@@ -180,6 +187,12 @@ function setupMessageRouter(db: DB, svc: Services) {
     ...createPomodoroHandlers(engine, svc.pomodoroSvc),
     ...createStatsHandlers(svc.statsSvc),
     ...dataHandlers,
+    'distraction:record': async (payload) => {
+      const result = await svc.distractionSvc.record(payload);
+      const { pomodoroId } = payload as { pomodoroId: string };
+      engine.recordDistraction(pomodoroId).catch((e: unknown) => logError('distraction:record after-hook', e));
+      return result;
+    },
     'meta:getFooter': async () => {
       const manifest = browser.runtime.getManifest() as { version: string };
       const [projectCount, taskCount, pomodoroCount, schemaVersion, lastExportAt] = await Promise.all([

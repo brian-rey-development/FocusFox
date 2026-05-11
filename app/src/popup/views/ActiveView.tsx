@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { usePopupStore, type ActivePomodoro } from '../PopupStore';
 import type { Project } from '@/modules/project/domain/types';
 import type { Task } from '@/modules/task/domain/types';
@@ -7,8 +8,6 @@ import { DistractionRow } from '../components/DistractionRow';
 import { ManualDistractionInput } from '../components/ManualDistractionInput';
 import { Actions } from '../components/Actions';
 import { CancelConfirm } from '../components/CancelConfirm';
-
-const noop = () => {};
 
 function findTask(tasks: Task[], active: ActivePomodoro): Task | undefined {
   return tasks.find((t) => t.id === active.taskId);
@@ -22,10 +21,8 @@ export function ActiveView() {
   const active = usePopupStore((s) => s.active) as ActivePomodoro;
   const tasks = usePopupStore((s) => s.tasks);
   const projects = usePopupStore((s) => s.projects);
-  const showManualInput = usePopupStore((s) => s.showManualInput);
-  const showCancelConfirm = usePopupStore((s) => s.showCancelConfirm);
-  const setShowManualInput = usePopupStore((s) => s.setShowManualInput);
-  const setShowCancelConfirm = usePopupStore((s) => s.setShowCancelConfirm);
+  const [showManualInput, setShowManualInput] = useState(false);
+  const [showCancelConfirm, setShowCancelConfirm] = useState(false);
   const recordDistraction = usePopupStore((s) => s.recordDistraction);
   const cancelPomodoro = usePopupStore((s) => s.cancelPomodoro);
 
@@ -62,7 +59,6 @@ export function ActiveView() {
       ) : (
         <Actions
           kind="active"
-          onPrimary={noop}
           onSecondary={() => setShowCancelConfirm(true)}
         />
       )}
