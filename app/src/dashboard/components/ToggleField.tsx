@@ -17,7 +17,6 @@ export function ToggleField({ label, description, value, onChange }: ToggleField
         className="toggle-field__input"
         checked={value}
         onChange={(e) => onChange(e.target.checked)}
-        role="switch"
       />
       <span className="toggle-field__visual" aria-hidden="true" />
     </label>

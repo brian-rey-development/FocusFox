@@ -14,6 +14,7 @@ export function DataActions({ onSaved }: DataActionsProps) {
   const [importError, setImportError] = useState('');
 
   async function handleExport() {
+    setImportError('');
     try {
       const payload = await sendMessage<ExportPayload>('data:export');
       const json = JSON.stringify(payload, null, 2);
@@ -29,7 +30,9 @@ export function DataActions({ onSaved }: DataActionsProps) {
       a.download = `focusfox-export-${y}${m}${d}.json`;
       a.click();
       URL.revokeObjectURL(url);
-    } catch {}
+    } catch {
+      setImportError('Error al exportar los datos. Intenta de nuevo.');
+    }
   }
 
   function handleFileSelected(e: React.ChangeEvent<HTMLInputElement>) {
@@ -65,7 +68,10 @@ export function DataActions({ onSaved }: DataActionsProps) {
       await sendMessage('data:import', importPreview);
       setImportPreview(null);
       onSaved();
-    } catch {}
+    } catch {
+      setImportPreview(null);
+      setImportError('Error al importar los datos. El archivo puede estar corrupto.');
+    }
   }
 
   async function handleReset() {
@@ -74,7 +80,11 @@ export function DataActions({ onSaved }: DataActionsProps) {
       setResetConfirm(false);
       setResetTyped('');
       onSaved();
-    } catch {}
+    } catch {
+      setResetConfirm(false);
+      setResetTyped('');
+      setImportError('Error al borrar los datos. Intenta de nuevo.');
+    }
   }
 
   useEffect(() => {

@@ -47,7 +47,7 @@ export function Sidebar({ tab, projects, selectedProjectId, tick, onNavigate, on
       <div className="sidebar__section">
         <span className="sidebar__section-title">Proyectos</span>
         <div className="sidebar__project-list">
-          {projects.map((p) => (
+          {projects.filter((p) => !p.archived).map((p) => (
             <button
               key={p.id}
               className={`sidebar__project-item${selectedProjectId === p.id ? ' sidebar__project-item--active' : ''}`}

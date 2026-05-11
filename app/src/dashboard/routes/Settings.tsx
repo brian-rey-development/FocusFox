@@ -16,9 +16,15 @@ interface FooterMeta {
   lastExportAt: number | null;
 }
 
+type SectionKey = 'pomodoro' | 'allowlist' | 'datos';
+
 export function SettingsView() {
   const [settings, setSettings] = useState<Settings | null>(null);
-  const [saved, setSaved] = useState(false);
+  const [savedSections, setSavedSections] = useState<Record<SectionKey, boolean>>({
+    pomodoro: false,
+    allowlist: false,
+    datos: false,
+  });
   const [footerMeta, setFooterMeta] = useState<FooterMeta | null>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const savedTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -45,10 +51,17 @@ export function SettingsView() {
     };
   }, [fetchSettings]);
 
-  if (!settings) return null;
+  if (!settings) return <div className="settings-loading">Cargando...</div>;
+
+  function markSaved(section: SectionKey) {
+    if (savedTimerRef.current) clearTimeout(savedTimerRef.current);
+    setSavedSections((prev) => ({ ...prev, [section]: true }));
+    savedTimerRef.current = setTimeout(() => {
+      setSavedSections((prev) => ({ ...prev, [section]: false }));
+    }, 1500);
+  }
 
   function update(patch: Partial<Omit<Settings, 'id'>>) {
-    setSaved(false);
     try {
       setSettings((prev) => prev ? { ...prev, ...patch } : prev);
     } catch (e) {
@@ -56,59 +69,57 @@ export function SettingsView() {
     }
   }
 
-  async function doSave(patch: Partial<Omit<Settings, 'id'>>) {
+  async function doSave(section: SectionKey, patch: Partial<Omit<Settings, 'id'>>) {
     try {
       await sendMessage('settings:update', patch);
-      setSaved(true);
-      savedTimerRef.current = setTimeout(() => setSaved(false), 1500);
+      markSaved(section);
     } catch (e) {
       console.error('[FocusFox]', e);
-      setSaved(false);
     }
   }
 
-  function debouncedUpdate(patch: Partial<Omit<Settings, 'id'>>) {
+  function debouncedUpdate(section: SectionKey, patch: Partial<Omit<Settings, 'id'>>) {
     if (debounceRef.current) clearTimeout(debounceRef.current);
     update(patch);
     debounceRef.current = setTimeout(() => {
-      doSave(patch);
+      doSave(section, patch);
     }, 300);
   }
 
-  async function updateNow(patch: Partial<Omit<Settings, 'id'>>) {
+  async function updateNow(section: SectionKey, patch: Partial<Omit<Settings, 'id'>>) {
     update(patch);
-    await doSave(patch);
+    await doSave(section, patch);
   }
 
   return (
     <div className="settings-view">
-      <SettingsSection title="Pomodoro" saved={saved}>
+      <SettingsSection title="Pomodoro" saved={savedSections.pomodoro}>
         <div className="settings-steppers">
           <MinuteStepper
             label="Duración trabajo"
             value={msToMinutes(settings.workMs)}
-            onChange={(v) => debouncedUpdate({ workMs: minutesToMs(v) })}
+            onChange={(v) => debouncedUpdate('pomodoro', { workMs: minutesToMs(v) })}
             min={1}
             max={120}
           />
           <MinuteStepper
             label="Descanso corto"
             value={msToMinutes(settings.shortBreakMs)}
-            onChange={(v) => debouncedUpdate({ shortBreakMs: minutesToMs(v) })}
+            onChange={(v) => debouncedUpdate('pomodoro', { shortBreakMs: minutesToMs(v) })}
             min={1}
             max={60}
           />
           <MinuteStepper
             label="Descanso largo"
             value={msToMinutes(settings.longBreakMs)}
-            onChange={(v) => debouncedUpdate({ longBreakMs: minutesToMs(v) })}
+            onChange={(v) => debouncedUpdate('pomodoro', { longBreakMs: minutesToMs(v) })}
             min={1}
             max={120}
           />
           <MinuteStepper
             label="Ciclos antes de descanso largo"
             value={settings.longBreakEvery}
-            onChange={(v) => debouncedUpdate({ longBreakEvery: v })}
+            onChange={(v) => debouncedUpdate('pomodoro', { longBreakEvery: v })}
             min={2}
             max={10}
             showSuffix={false}
@@ -119,32 +130,32 @@ export function SettingsView() {
             label="Iniciar descanso automáticamente"
             description="Al terminar un pomodoro, el descanso comienza automáticamente"
             value={settings.autoStartBreaks}
-            onChange={(v) => updateNow({ autoStartBreaks: v })}
+            onChange={(v) => updateNow('pomodoro', { autoStartBreaks: v })}
           />
           <ToggleField
             label="Iniciar siguiente pomodoro automáticamente"
             description="Al terminar un descanso, el siguiente pomodoro comienza automáticamente"
             value={settings.autoStartNextWork}
-            onChange={(v) => updateNow({ autoStartNextWork: v })}
+            onChange={(v) => updateNow('pomodoro', { autoStartNextWork: v })}
           />
         </div>
       </SettingsSection>
 
-      <SettingsSection title="Sitios permitidos" saved={saved}>
+      <SettingsSection title="Sitios permitidos" saved={savedSections.allowlist}>
         <p className="settings-allowlist-desc">
           Cuando estás en foco, solo podés navegar a estos dominios. Coincide con subdominios automáticamente.
         </p>
         <DomainAddInput
-          onAdd={(domain) => updateNow({ allowlist: [...settings.allowlist, domain] })}
+          onAdd={(domain) => updateNow('allowlist', { allowlist: [...settings.allowlist, domain] })}
           existing={settings.allowlist}
         />
         <DomainList
           domains={settings.allowlist}
-          onChange={(updated) => updateNow({ allowlist: updated })}
+          onChange={(updated) => updateNow('allowlist', { allowlist: updated })}
         />
       </SettingsSection>
 
-      <SettingsSection title="Datos" saved={saved}>
+      <SettingsSection title="Datos" saved={savedSections.datos}>
         <DataActions onSaved={fetchSettings} />
       </SettingsSection>
 
