@@ -27,7 +27,11 @@ export function StatsView() {
     fetchSummary();
   }, [fetchSummary]);
 
-  const hasData = summary && summary.today.workPomodoros > 0;
+  const hasData = summary && (
+    summary.today.workPomodoros > 0 ||
+    summary.streak.longestDays > 0 ||
+    summary.range.total > 0
+  );
 
   return (
     <div className="stats-view">
