@@ -175,6 +175,8 @@ function setupMessageRouter(db: DB, svc: Services) {
 
   const dataHandlers = wrapHandler(createDataHandlers(svc.dataSvc), {
     'data:export': () => { svc.metaSvc.set('lastExportAt', Date.now()).catch((e) => logError('data:export after-hook', e)); },
+    'data:reset': async () => { await engine.cancel().catch(() => {}); },
+    'data:import': async () => { await engine.cancel().catch(() => {}); },
   });
 
   const handlers: MessageRouter = {

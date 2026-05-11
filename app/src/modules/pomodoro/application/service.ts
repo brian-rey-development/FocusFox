@@ -43,15 +43,32 @@ export function createPomodoroService(
     },
 
     async getActive() {
-      const today = dayKey(Date.now());
-      const yesterdayMs = Date.now() - 86_400_000;
+      const now = Date.now();
+      const today = dayKey(now);
+      const yesterdayMs = now - 86_400_000;
       const yesterday = dayKey(yesterdayMs);
       const days = yesterday === today
         ? [today]
         : [yesterday, today];
       const both = await Promise.all(days.map((d) => db.pomodoros.listForDay(d)));
       const all = both.flat();
-      return all.find((p) => p.endedAt === null) ?? null;
+      const candidate = all.find((p) => p.endedAt === null) ?? null;
+
+      if (candidate === null) return null;
+
+      const GRACE_MS = 60_000;
+      const staleAt = candidate.startedAt + candidate.plannedDurationMs + GRACE_MS;
+      if (now >= staleAt) {
+        await db.pomodoros.finish(
+          candidate.id,
+          candidate.startedAt + candidate.plannedDurationMs,
+          false,
+          candidate.distractionCount,
+        );
+        return null;
+      }
+
+      return candidate;
     },
 
     async getTodayStats() {
